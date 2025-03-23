@@ -15,9 +15,11 @@ import com.example.weatherapp.data.remote.RetrofitClient
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.data.repo.WeatherRepositoryImpl
 import com.example.weatherapp.navigations.MainScreen
+import com.example.weatherapp.setting.LanguageChangeHelper
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -25,9 +27,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var weatherRepository: WeatherRepositoryImpl
     private lateinit var locationRepository: LocationRepository
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        LanguageChangeHelper.getSavedLanguage(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         val remoteDataSource = RemoteDataSourceImpl(services = RetrofitClient.service)

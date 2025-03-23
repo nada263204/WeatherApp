@@ -14,7 +14,7 @@ interface ApiServices {
         @Query("lon") lon: Double,
         @Query("appid") appid: String = "da5a7b1f5f513a2397980af6ed750940",
         @Query("units") units: String = "metric",
-        @Query("lang") lang: String = ""
+        @Query("lang") lang: String,
     ): Response<ResponseCurrentWeather>
 
 
@@ -24,6 +24,6 @@ interface ApiServices {
         @Query("lon") lon: Double,
         @Query("appid") key: String = "da5a7b1f5f513a2397980af6ed750940",
         @Query("units") units: String = "metric",
-        @Query("lang") lang: String = ""
+        @Query("lang") lang: String
     ): Response<Response5days3hours>
 }

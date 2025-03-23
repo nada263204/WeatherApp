@@ -10,17 +10,27 @@ import kotlinx.coroutines.flow.flow
 
 class WeatherRepositoryImpl(private val remoteDataSource: RemoteDataSource) : WeatherRepository {
 
-    override suspend fun getCurrentWeather(lat: Double, lon: Double, isOnline: Boolean): Flow<ResponseCurrentWeather?> {
+    override suspend fun getCurrentWeather(
+        lat: Double,
+        lon: Double,
+        lang: String,
+        isOnline: Boolean
+    ): Flow<ResponseCurrentWeather?> {
         return flow {
-            emit(remoteDataSource.getCurrentWeather(lat, lon).firstOrNull())
+            emit(remoteDataSource.getCurrentWeather(lat, lon, lang).firstOrNull())
         }.catch { e ->
             emit(null)
         }
     }
 
-    override suspend fun getForecastWeather(lat: Double, lon: Double,isOnline: Boolean): Flow<Response5days3hours?> {
+    override suspend fun getForecastWeather(
+        lat: Double,
+        lon: Double,
+        lang: String,
+        isOnline: Boolean
+    ): Flow<Response5days3hours?> {
         return flow {
-            emit(remoteDataSource.getForecastWeather(lat, lon).firstOrNull())
+            emit(remoteDataSource.getForecastWeather(lat, lon,lang).firstOrNull())
         }.catch { e ->
             emit(null)
         }

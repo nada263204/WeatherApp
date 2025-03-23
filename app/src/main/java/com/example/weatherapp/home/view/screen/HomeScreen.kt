@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +45,7 @@ fun HomeScreen(viewModel: WeatherViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         when (currentWeatherState) {
-            is CurrentWeatherState.Loading -> Text("Loading...", fontSize = 18.sp, color = Color.White)
+            is CurrentWeatherState.Loading -> Text(stringResource(R.string.loading), fontSize = 18.sp, color = Color.White)
 
             is CurrentWeatherState.Success -> {
                 val data = (currentWeatherState as CurrentWeatherState.Success).data
@@ -56,7 +57,6 @@ fun HomeScreen(viewModel: WeatherViewModel) {
 
                 WeatherIcon(conditionId = data.weather[0].icon, description = data.weather[0].description)
 
-
                 Spacer(modifier = Modifier.height(24.dp))
 
                 WeatherDetails(
@@ -67,7 +67,6 @@ fun HomeScreen(viewModel: WeatherViewModel) {
                     pressure = data.main.pressure
                 )
 
-
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
@@ -76,22 +75,22 @@ fun HomeScreen(viewModel: WeatherViewModel) {
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    Text("Today", fontSize = 20.sp, color = Color.White)
+                    Text(stringResource(R.string.today), fontSize = 20.sp, color = Color.White)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 when (forecastWeatherState) {
-                    is ForecastWeatherState.Loading -> Text("Loading forecast...", fontSize = 18.sp, color = Color.White)
+                    is ForecastWeatherState.Loading -> Text(stringResource(R.string.loading_forecast), fontSize = 18.sp, color = Color.White)
                     is ForecastWeatherState.Success -> {
                         val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
                         WeatherForecastSection(forecastData.list)
                     }
-                    is ForecastWeatherState.Failure -> Text("Failed to load forecast", fontSize = 18.sp, color = Color.White)
+                    is ForecastWeatherState.Failure -> Text(stringResource(R.string.failed_to_load_forecast), fontSize = 18.sp, color = Color.White)
                 }
             }
 
-            is CurrentWeatherState.Failure -> Text("Failed to load weather", fontSize = 18.sp, color = Color.White)
+            is CurrentWeatherState.Failure -> Text(stringResource(R.string.failed_to_load_weather), fontSize = 18.sp, color = Color.White)
         }
     }
 }
@@ -117,7 +116,38 @@ fun WeatherForecastSection(forecastList: List<ListItem>) {
                 onClick = { selectedIndex = if (selectedIndex == index) -1 else index }
             )
         }
+    }
+}
 
+@Composable
+fun CityAndDateSection(city: String) {
+    val currentDate = remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date()) }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = city, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(text = currentDate, fontSize = 16.sp, color = Color.LightGray)
+    }
+}
+
+@Composable
+fun WeatherDetails(temp: Any, wind: Any, humidity: Int, clouds: Int, pressure: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        WeatherStat(stringResource(R.string.temperature), "${temp}°C")
+        WeatherStat(stringResource(R.string.wind), "${wind} km/h")
+        WeatherStat(stringResource(R.string.humidity), "$humidity%")
+        WeatherStat(stringResource(R.string.clouds), "$clouds%")
+        WeatherStat(stringResource(R.string.pressure), "$pressure hPa")
+    }
+}
+
+@Composable
+fun WeatherStat(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = label, fontSize = 14.sp, color = Color.LightGray)
+        Text(text = value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
     }
 }
 
@@ -134,7 +164,6 @@ fun getWeatherIcon(conditionId: String): Int {
         else -> R.drawable._01n
     }
 }
-
 
 @Composable
 fun WeatherHourCard(data: WeatherHourData, isSelected: Boolean, onClick: () -> Unit) {
@@ -165,17 +194,6 @@ fun WeatherHourCard(data: WeatherHourData, isSelected: Boolean, onClick: () -> U
 }
 
 data class WeatherHourData(val time: String, val temperature: String, val iconRes: Int)
-
-@Composable
-fun CityAndDateSection(city: String) {
-    val currentDate = remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date()) }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = city, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        Text(text = currentDate, fontSize = 16.sp, color = Color.LightGray)
-    }
-}
-
 @Composable
 fun WeatherIcon(conditionId: String, description: String) {
     val iconMap = mapOf(
@@ -200,29 +218,5 @@ fun WeatherIcon(conditionId: String, description: String) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = description, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
-    }
-}
-
-
-@Composable
-fun WeatherDetails(temp: Any, wind: Any, humidity: Int, clouds: Int, pressure: Int) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        WeatherStat("Temp", "${temp}°C")
-        WeatherStat("Wind", "${wind} km/h")
-        WeatherStat("Humidity", "$humidity%")
-        WeatherStat("Clouds", "$clouds%")
-        WeatherStat("Pressure", "$pressure hPa")
-    }
-}
-
-
-@Composable
-fun WeatherStat(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, fontSize = 14.sp, color = Color.LightGray)
-        Text(text = value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
     }
 }

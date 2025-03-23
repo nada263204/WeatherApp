@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import java.util.Locale
 
 data class LocationData(
     val latitude: Double,
@@ -72,9 +73,10 @@ class WeatherViewModel(
     }
 
     fun fetchCurrentWeather(lat: Double, lon: Double) {
+        val lang = Locale.getDefault().language
         viewModelScope.launch {
             try {
-                weatherRepository.getCurrentWeather(lat, lon, isOnline = true)
+                weatherRepository.getCurrentWeather(lat, lon, lang ,isOnline = true)
                     .collectLatest { response ->
                         _currentWeatherState.value = response?.let {
                             CurrentWeatherState.Success(it)
@@ -89,8 +91,9 @@ class WeatherViewModel(
 
     fun fetchForecastWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
+            val lang = Locale.getDefault().language
             try {
-                weatherRepository.getForecastWeather(lat, lon, isOnline = true)
+                weatherRepository.getForecastWeather(lat, lon, lang,isOnline = true)
                     .collectLatest { response ->
                         _forecastWeatherState.value = response?.let {
                             ForecastWeatherState.Success(it)
