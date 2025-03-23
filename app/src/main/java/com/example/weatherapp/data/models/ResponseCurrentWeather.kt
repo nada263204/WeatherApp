@@ -9,8 +9,8 @@ data class ResponseCurrentWeather(
     val wind: Wind
 )
 data class Response5days3hours(
-    val city: City,
-    val list: List<ListItem>
+    val list: List<ListItem>,
+    val city: City
 )
 data class ListItem(
     val dt_txt: String,

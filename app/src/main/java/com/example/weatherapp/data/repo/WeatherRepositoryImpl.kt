@@ -1,32 +1,39 @@
 package com.example.weatherapp.data.repo
 
-import android.util.Log
 import com.example.weatherapp.data.models.Response5days3hours
 import com.example.weatherapp.data.models.ResponseCurrentWeather
 import com.example.weatherapp.data.remote.RemoteDataSource
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
 
-class WeatherRepositoryImpl private constructor(private val remoteDataSource : RemoteDataSource): WeatherRepository {
+class WeatherRepositoryImpl(private val remoteDataSource: RemoteDataSource) : WeatherRepository {
 
-    override suspend fun getCurrentWeather(isOnline: Boolean): ResponseCurrentWeather? {
-        return remoteDataSource.getCurrentWeather()
-    }
-
-    override suspend fun getForecastWeather(isOnline: Boolean): Response5days3hours? {
-        return remoteDataSource.getForecastWeather()
-    }
-
-    companion object{
-        private var INSTANCE : WeatherRepositoryImpl ?= null
-        fun getInstance(remoteDataSource: RemoteDataSource): WeatherRepository{
-            return INSTANCE ?: synchronized (this){
-                val temp = WeatherRepositoryImpl(remoteDataSource)
-                INSTANCE=temp
-                temp
-            }
+    override suspend fun getCurrentWeather(lat: Double, lon: Double, isOnline: Boolean): Flow<ResponseCurrentWeather?> {
+        return flow {
+            emit(remoteDataSource.getCurrentWeather(lat, lon).firstOrNull())
+        }.catch { e ->
+            emit(null)
         }
     }
 
+    override suspend fun getForecastWeather(lat: Double, lon: Double,isOnline: Boolean): Flow<Response5days3hours?> {
+        return flow {
+            emit(remoteDataSource.getForecastWeather(lat, lon).firstOrNull())
+        }.catch { e ->
+            emit(null)
+        }
+    }
 
+    companion object {
+        @Volatile
+        private var INSTANCE: WeatherRepositoryImpl? = null
+
+        fun getInstance(remoteDataSource: RemoteDataSource): WeatherRepositoryImpl {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: WeatherRepositoryImpl(remoteDataSource).also { INSTANCE = it }
+            }
+        }
+    }
 }

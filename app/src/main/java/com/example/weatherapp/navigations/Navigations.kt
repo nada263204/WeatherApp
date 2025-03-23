@@ -16,18 +16,33 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.example.weatherapp.R
-import com.example.weatherapp.home.HomeScreen
+import com.example.weatherapp.data.repo.LocationRepository
+import com.example.weatherapp.data.repo.WeatherRepository
+import com.example.weatherapp.home.view.screen.HomeScreen
+import com.example.weatherapp.home.viewModel.WeatherViewModel
+import com.example.weatherapp.home.viewModel.WeatherViewModelFactory
 import com.example.weatherapp.notifications.NotificationScreen
 import com.example.weatherapp.search.SearchScreen
 import com.example.weatherapp.setting.SettingsScreen
+import com.example.weatherapp.ui.theme.Purple80
 import com.example.weatherapp.ui.theme.purpleDark
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    latitude: Double,
+    longitude: Double,
+    weatherRepository: WeatherRepository,
+    locationRepository: LocationRepository
+) {
     val navController = rememberNavController()
+
+    val viewModel: WeatherViewModel = viewModel(
+        factory = WeatherViewModelFactory(weatherRepository, locationRepository)
+    )
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -39,7 +54,8 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-            NavHostContainer(navController, Modifier.padding(innerPadding))
+
+            NavHostContainer(navController, viewModel, Modifier.padding(innerPadding))
         }
     }
 }
@@ -47,10 +63,10 @@ fun MainScreen() {
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf(
-        BottomNavItem("home", "Home", Icons.Filled.Home),
-        BottomNavItem("search", "Search", Icons.Filled.Search),
-        BottomNavItem("notification", "Notification", Icons.Filled.Notifications),
-        BottomNavItem("settings", "Settings", Icons.Filled.Settings),
+        BottomNavItem("home", Icons.Filled.Home),
+        BottomNavItem("search", Icons.Filled.Search),
+        BottomNavItem("notification", Icons.Filled.Notifications),
+        BottomNavItem("settings", Icons.Filled.Settings)
     )
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
@@ -61,31 +77,31 @@ fun BottomNavigationBar(navController: NavHostController) {
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     ) {
         NavigationBar(
-            containerColor = Color.Transparent,
-            contentColor = Color.White
+            containerColor = purpleDark,
+            contentColor = Purple80
         ) {
             items.forEach { item ->
+                val isSelected = currentRoute == item.route
+
                 NavigationBarItem(
                     icon = {
                         Icon(
                             item.icon,
-                            contentDescription = item.label
+                            contentDescription = null
                         )
                     },
-                    selected = currentRoute == item.route,
+                    selected = isSelected,
                     onClick = {
-                        if (currentRoute != item.route) {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                        unselectedIconColor = Color.White,
-                        indicatorColor = MaterialTheme.colorScheme.secondary
+                        selectedIconColor = Purple80,
+                        unselectedIconColor = Color.Gray,
+                        indicatorColor = Color.Transparent
                     )
                 )
             }
@@ -93,17 +109,22 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
-
-
-
 @Composable
-fun NavHostContainer(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController, startDestination = "home", modifier = modifier) {
-        composable("home") { HomeScreen() }
+fun NavHostContainer(
+    navController: NavHostController,
+    viewModel: WeatherViewModel,
+    modifier: Modifier
+) {
+    NavHost(
+        navController,
+        startDestination = "home",
+        modifier = modifier
+    ) {
+        composable("home") { HomeScreen(viewModel) }
         composable("search") { SearchScreen() }
         composable("notification") { NotificationScreen() }
         composable("settings") { SettingsScreen() }
     }
 }
 
-data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)
+data class BottomNavItem(val route: String, val icon: ImageVector)

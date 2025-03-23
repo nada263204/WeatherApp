@@ -2,8 +2,9 @@ package com.example.weatherapp.data.repo
 
 import com.example.weatherapp.data.models.Response5days3hours
 import com.example.weatherapp.data.models.ResponseCurrentWeather
+import kotlinx.coroutines.flow.Flow
 
 interface WeatherRepository {
-    suspend fun getCurrentWeather(isOnline : Boolean): ResponseCurrentWeather?
-    suspend fun getForecastWeather(isOnline: Boolean): Response5days3hours?
+    suspend fun getCurrentWeather(lat: Double, lon: Double, isOnline: Boolean): Flow<ResponseCurrentWeather?>
+    suspend fun getForecastWeather(lat: Double, lon: Double,isOnline: Boolean): Flow<Response5days3hours?>
 }
