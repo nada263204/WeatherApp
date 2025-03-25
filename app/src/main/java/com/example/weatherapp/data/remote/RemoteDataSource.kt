@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 
 interface RemoteDataSource {
-    fun getCurrentWeather(lat: Double, lon: Double , lang: String): Flow<ResponseCurrentWeather?>
-    fun getForecastWeather(lat: Double, lon: Double , lang: String ): Flow<Response5days3hours?>
+    fun getCurrentWeather(lat: Double, lon: Double , lang: String , units: String): Flow<ResponseCurrentWeather?>
+    fun getForecastWeather(lat: Double, lon: Double , lang: String , units: String): Flow<Response5days3hours?>
 }

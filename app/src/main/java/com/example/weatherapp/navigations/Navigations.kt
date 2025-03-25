@@ -14,20 +14,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.example.weatherapp.R
+import com.example.weatherapp.Utiles.LocationUtils
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.data.repo.WeatherRepository
 import com.example.weatherapp.home.view.screen.HomeScreen
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 import com.example.weatherapp.home.viewModel.WeatherViewModelFactory
 import com.example.weatherapp.notifications.NotificationScreen
-import com.example.weatherapp.search.SearchScreen
+import com.example.weatherapp.search.FavoriteScreen
+import com.example.weatherapp.setting.MapScreen
 import com.example.weatherapp.setting.SettingsScreen
+import com.example.weatherapp.setting.SettingsViewModel
+import com.example.weatherapp.setting.SettingsViewModelFactory
 import com.example.weatherapp.ui.theme.Purple80
 import com.example.weatherapp.ui.theme.purpleDark
 
@@ -40,9 +45,15 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
 
-    val viewModel: WeatherViewModel = viewModel(
-        factory = WeatherViewModelFactory(weatherRepository, locationRepository)
-    )
+    val context = LocalContext.current
+    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(context,
+        LocationRepository(locationUtils = LocationUtils(LocalContext.current))))
+
+    val weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModelFactory(
+        weatherRepository,
+        locationRepository,
+        settingsViewModel
+    ))
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -55,10 +66,12 @@ fun MainScreen(
                 contentScale = ContentScale.Crop
             )
 
-            NavHostContainer(navController, viewModel, Modifier.padding(innerPadding))
+            NavHostContainer(navController, weatherViewModel, Modifier.padding(innerPadding))
         }
     }
 }
+
+
 
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
@@ -121,10 +134,15 @@ fun NavHostContainer(
         modifier = modifier
     ) {
         composable("home") { HomeScreen(viewModel) }
-        composable("search") { SearchScreen() }
+        composable("search") { FavoriteScreen(navController) }
         composable("notification") { NotificationScreen() }
-        composable("settings") { SettingsScreen() }
+        composable("settings") { SettingsScreen(
+            navController,
+            weatherViewModel = viewModel
+        ) }
+        composable("map") { MapScreen(navController,viewModel) }
     }
 }
+
 
 data class BottomNavItem(val route: String, val icon: ImageVector)

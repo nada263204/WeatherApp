@@ -16,5 +16,6 @@
     <string name="select_location">Select Location:</string>
     <string name="temperature_unit">Temperature Unit:</string>
     <string name="wind_speed_unit">Wind Speed Unit:</string>
+    <string name="this_week">This Week</string>
     <string name="language">Language:</string>
 </resources>

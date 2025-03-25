@@ -45,7 +45,11 @@ fun HomeScreen(viewModel: WeatherViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         when (currentWeatherState) {
-            is CurrentWeatherState.Loading -> Text(stringResource(R.string.loading), fontSize = 18.sp, color = Color.White)
+            is CurrentWeatherState.Loading -> Text(
+                stringResource(R.string.loading),
+                fontSize = 18.sp,
+                color = Color.White
+            )
 
             is CurrentWeatherState.Success -> {
                 val data = (currentWeatherState as CurrentWeatherState.Success).data
@@ -77,23 +81,56 @@ fun HomeScreen(viewModel: WeatherViewModel) {
                 ) {
                     Text(stringResource(R.string.today), fontSize = 20.sp, color = Color.White)
                 }
+                Spacer(modifier = Modifier.height(24.dp))
+
+                when (forecastWeatherState) {
+                    is ForecastWeatherState.Success -> {
+                        val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
+                        WeatherForecastSection(forecastData.list)
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                    is ForecastWeatherState.Loading -> Text(
+                        stringResource(R.string.loading_forecast),
+                        fontSize = 18.sp,
+                        color = Color.White
+                    )
+                    is ForecastWeatherState.Failure -> Text(
+                        stringResource(R.string.failed_to_load_forecast),
+                        fontSize = 18.sp,
+                        color = Color.White
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Text(stringResource(R.string.this_week), fontSize = 20.sp, color = Color.White)
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 when (forecastWeatherState) {
-                    is ForecastWeatherState.Loading -> Text(stringResource(R.string.loading_forecast), fontSize = 18.sp, color = Color.White)
                     is ForecastWeatherState.Success -> {
                         val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
-                        WeatherForecastSection(forecastData.list)
+                        WeatherDailyForecastSection(forecastData.list)
                     }
-                    is ForecastWeatherState.Failure -> Text(stringResource(R.string.failed_to_load_forecast), fontSize = 18.sp, color = Color.White)
+                    else -> {}
                 }
             }
 
-            is CurrentWeatherState.Failure -> Text(stringResource(R.string.failed_to_load_weather), fontSize = 18.sp, color = Color.White)
+            is CurrentWeatherState.Failure -> Text(
+                stringResource(R.string.failed_to_load_weather),
+                fontSize = 18.sp,
+                color = Color.White
+            )
         }
     }
 }
+
+
 
 @Composable
 fun WeatherForecastSection(forecastList: List<ListItem>) {
@@ -118,6 +155,36 @@ fun WeatherForecastSection(forecastList: List<ListItem>) {
         }
     }
 }
+
+@Composable
+fun WeatherDailyForecastSection(forecastList: List<ListItem>) {
+    var selectedIndex by remember { mutableStateOf(-1) }
+
+    val dailyForecast = forecastList
+        .groupBy { it.dt_txt.substring(0, 10) }
+        .map { it.value.first() }
+
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        itemsIndexed(dailyForecast) { index, item ->
+            val formattedDate = item.dt_txt.substring(5, 10)
+            val iconRes = getWeatherIcon(item.weather[0].icon)
+            val temperature = "${item.main.temp}°"
+
+            WeatherHourCard(
+                data = WeatherHourData(formattedDate, temperature, iconRes),
+                isSelected = index == selectedIndex,
+                onClick = { selectedIndex = if (selectedIndex == index) -1 else index }
+            )
+        }
+    }
+}
+
+
 
 @Composable
 fun CityAndDateSection(city: String) {
@@ -220,3 +287,5 @@ fun WeatherIcon(conditionId: String, description: String) {
         Text(text = description, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
     }
 }
+
+

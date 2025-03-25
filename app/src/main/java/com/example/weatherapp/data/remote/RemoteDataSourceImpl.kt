@@ -12,14 +12,14 @@ import java.io.IOException
 
 class RemoteDataSourceImpl(private val services: ApiServices) : RemoteDataSource {
 
-    override fun getCurrentWeather(lat: Double, lon: Double ,lang : String) = flow {
-        services.getCurrentWeather(lat,lon,lang=lang).body()?.let {
+    override fun getCurrentWeather(lat: Double, lon: Double ,lang : String,units: String) = flow {
+        services.getCurrentWeather(lat,lon,lang=lang, units = units).body()?.let {
             emit(it)
         }
     }
 
-    override fun getForecastWeather(lat: Double, lon: Double ,lang : String) = flow {
-        services.get5days3hoursForecast(lat,lon, lang = lang).body()?.let {
+    override fun getForecastWeather(lat: Double, lon: Double ,lang : String,units: String) = flow {
+        services.get5days3hoursForecast(lat,lon, lang = lang, units = units).body()?.let {
             emit(it)
         }
     }

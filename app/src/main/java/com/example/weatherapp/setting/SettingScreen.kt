@@ -1,8 +1,6 @@
 package com.example.weatherapp.setting
 
-import android.content.Context
-import android.content.SharedPreferences
-import android.content.res.Configuration
+import androidx.compose.foundation.gestures.snapping.SnapPosition.Center.position
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -16,15 +14,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.weatherapp.R
-import java.util.Locale
+import com.example.weatherapp.Utiles.LocationUtils
+import com.example.weatherapp.data.repo.LocationRepository
+import com.example.weatherapp.home.viewModel.WeatherViewModel
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current))) {
+fun SettingsScreen(navController: NavController,viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current,LocationRepository(locationUtils = LocationUtils(LocalContext.current)))), weatherViewModel: WeatherViewModel) {
     val selectedLocation by viewModel.selectedLocation.collectAsState()
     val selectedTemperatureUnit by viewModel.selectedTemperatureUnit.collectAsState()
     val selectedWindSpeedUnit by viewModel.selectedWindSpeedUnit.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
+    val currentLocation by viewModel.currentLocation.collectAsState()
 
     Column(
         modifier = Modifier
@@ -42,15 +44,30 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel(factory = SettingsVi
                     Modifier
                         .selectable(
                             selected = (selectedLocation == option),
-                            onClick = { viewModel.updateLocation(option) }
+                            onClick = {
+                                viewModel.updateLocation(option)
+                                if (option == "Map") {
+                                    navController.navigate("map")
+                                }else if (option == "GPS") {
+                                    currentLocation?.let { location ->
+                                        weatherViewModel.setUserSelectedLocation(location.latitude, location.longitude)
+                                    }
+                                }
+                            }
                         )
                         .padding(8.dp)
                 ) {
                     RadioButton(
                         selected = (selectedLocation == option),
-                        onClick = { viewModel.updateLocation(option) }
+                        onClick = {
+                            viewModel.updateLocation(option)
+                            if (option == "Map") {
+                                navController.navigate("map")
+                            }
+                        }
                     )
                     Text(option, Modifier.padding(start = 8.dp), color = Color.White)
+
                 }
             }
         }
@@ -67,8 +84,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel(factory = SettingsVi
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(stringResource(R.string.wind_speed_unit), fontSize = 18.sp, color = Color.White)
+
         DropdownMenuSetting(
-            options = listOf("m/s", "mph"),
+            options = if (selectedTemperatureUnit == "Kelvin") listOf("mph") else listOf("m/s", "mph"),
             selectedOption = selectedWindSpeedUnit,
             onOptionSelected = { viewModel.updateWindSpeedUnit(it) }
         )
@@ -84,20 +102,35 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel(factory = SettingsVi
     }
 }
 
-
 @Composable
-fun DropdownMenuSetting(options: List<String>, selectedOption: String, onOptionSelected: (String) -> Unit) {
+fun DropdownMenuSetting(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
+
     Box(modifier = Modifier.fillMaxWidth()) {
-        Button(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text(selectedOption, color = Color.White)
+        Button(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White
+            )
+        ) {
+            Text(selectedOption)
         }
+
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
-                DropdownMenuItem(text = { Text(option, color = Color.White) }, onClick = {
-                    onOptionSelected(option)
-                    expanded = false
-                })
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }
