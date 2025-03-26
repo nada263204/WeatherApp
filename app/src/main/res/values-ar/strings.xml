@@ -16,5 +16,6 @@
     <string name="select_location">اختر الموقع:</string>
     <string name="temperature_unit">وحدة درجة الحرارة:</string>
     <string name="wind_speed_unit">وحدة سرعة الرياح:</string>
+    <string name="this_week">هذا الاسبوع</string>
     <string name="language">اللغة:</string>
 </resources>

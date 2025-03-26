@@ -1,12 +1,9 @@
-package com.example.weatherapp.Utiles
+package com.example.weatherapp.utiles
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.os.Looper
-import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback

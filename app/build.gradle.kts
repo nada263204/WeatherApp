@@ -85,6 +85,17 @@ dependencies {
     implementation ("com.google.android.gms:play-services-location:21.0.1")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.maps.android:maps-compose:2.11.2")
+    implementation("androidx.navigation:navigation-compose:2.5.3")
+    implementation("androidx.compose.ui:ui:1.6.0")
+    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    implementation("com.google.maps.android:maps-compose:2.15.0")
+
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
 
 
