@@ -1,7 +1,7 @@
 package com.example.weatherapp.data.repo
 
+import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.data.local.LocalDataSource
-import com.example.weatherapp.data.models.FavoritePlace
 import com.example.weatherapp.data.models.Response5days3hours
 import com.example.weatherapp.data.models.ResponseCurrentWeather
 import com.example.weatherapp.data.remote.RemoteDataSource
@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 class WeatherRepositoryImpl(
     private val remoteDataSource: RemoteDataSource,
@@ -23,10 +24,15 @@ class WeatherRepositoryImpl(
         isOnline: Boolean
     ): Flow<ResponseCurrentWeather?> {
         return flow {
-            emit(remoteDataSource.getCurrentWeather(lat, lon, lang, units).firstOrNull())
-        }.catch { e ->
-            emit(null)
-        }
+            if (isOnline) {
+                val response = remoteDataSource.getCurrentWeather(lat, lon, lang, units).firstOrNull()
+                emit(response)
+            } else {
+                // Fetch from the favorite places if offline
+                val favoritePlaces = localDataSource.getAllFavoritePlaces()
+                emit(favoritePlaces.map { it.find { place -> place.coord.lat == lat && place.coord.lon == lon }?.let { toCurrentWeather(it) } }.firstOrNull())
+            }
+        }.catch { emit(null) }
     }
 
     override suspend fun getForecastWeather(
@@ -37,22 +43,44 @@ class WeatherRepositoryImpl(
         isOnline: Boolean
     ): Flow<Response5days3hours?> {
         return flow {
-            emit(remoteDataSource.getForecastWeather(lat, lon, lang, units).firstOrNull())
-        }.catch { e ->
-            emit(null)
-        }
+            if (isOnline) {
+                val response = remoteDataSource.getForecastWeather(lat, lon, lang, units).firstOrNull()
+                emit(response)
+            } else {
+                val favoritePlaces = localDataSource.getAllFavoritePlaces()
+                emit(favoritePlaces.map { it.find { place -> place.coord.lat == lat && place.coord.lon == lon }?.let { toForecastWeather(it) } }.firstOrNull())
+            }
+        }.catch { emit(null) }
     }
 
-    override fun getAllFavoritePlaces(): Flow<List<FavoritePlace>> {
+    override fun getFavoritePlaces(): Flow<List<FavoritePlace>> {
         return localDataSource.getAllFavoritePlaces()
     }
 
-    override suspend fun insertFavoritePlace(place: FavoritePlace) {
+    override suspend fun saveFavoritePlace(place: FavoritePlace) {
         localDataSource.insertFavoritePlace(place)
     }
 
     override suspend fun deleteFavoritePlace(place: FavoritePlace) {
         localDataSource.deleteFavoritePlace(place)
+    }
+
+    private fun toCurrentWeather(favoritePlace: FavoritePlace): ResponseCurrentWeather {
+        return ResponseCurrentWeather(
+            coord = favoritePlace.coord,
+            main = favoritePlace.main,
+            clouds = favoritePlace.clouds,
+            weather = favoritePlace.weather,
+            wind = favoritePlace.wind,
+            name = favoritePlace.cityName
+        )
+    }
+
+    private fun toForecastWeather(favoritePlace: FavoritePlace): Response5days3hours {
+        return Response5days3hours(
+            list = favoritePlace.forecast,
+            city = favoritePlace.city
+        )
     }
 
     companion object {

@@ -9,7 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.weatherapp.Utiles.LocationUtils
+import com.example.weatherapp.data.local.AppDatabase
+import com.example.weatherapp.data.local.LocalDataSourceImpl
 import com.example.weatherapp.data.remote.RemoteDataSourceImpl
 import com.example.weatherapp.data.remote.RetrofitClient
 import com.example.weatherapp.data.repo.LocationRepository
@@ -17,6 +18,7 @@ import com.example.weatherapp.data.repo.WeatherRepositoryImpl
 import com.example.weatherapp.navigations.MainScreen
 import com.example.weatherapp.setting.LanguageChangeHelper
 import com.example.weatherapp.ui.theme.WeatherAppTheme
+import com.example.weatherapp.utiles.LocationUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import java.util.Locale
@@ -35,8 +37,11 @@ class MainActivity : ComponentActivity() {
         LanguageChangeHelper.getSavedLanguage(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        val database = AppDatabase.getDatabase(this)
+        val localDataSource = LocalDataSourceImpl(database.favoritePlaceDao())
+
         val remoteDataSource = RemoteDataSourceImpl(services = RetrofitClient.service)
-        weatherRepository = WeatherRepositoryImpl.getInstance(remoteDataSource)
+        weatherRepository = WeatherRepositoryImpl.getInstance(remoteDataSource,localDataSource)
         locationRepository = LocationRepository(LocationUtils(this))
 
         requestLocationPermission { lat, lon ->

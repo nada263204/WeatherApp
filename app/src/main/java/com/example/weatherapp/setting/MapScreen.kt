@@ -102,13 +102,25 @@ fun MapScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            IconButton(onClick = { /* Favorite action */ }) {
+                            IconButton(
+                                onClick = {
+                                    selectedPosition?.let { position ->
+                                        weatherViewModel.fetchAndSaveFavoritePlace(
+                                            context,
+                                            position.latitude,
+                                            position.longitude,
+                                            placeName
+                                        )
+                                    }
+                                }
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.FavoriteBorder,
                                     contentDescription = "Add to Favorites",
                                     tint = primaryColor
                                 )
                             }
+
                             Button(
                                 onClick = {
                                     weatherViewModel.setUserSelectedLocation(position.latitude, position.longitude)

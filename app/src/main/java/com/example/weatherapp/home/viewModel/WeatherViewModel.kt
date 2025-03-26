@@ -1,11 +1,13 @@
 package com.example.weatherapp.home.viewModel
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.data.models.CurrentWeatherState
 import com.example.weatherapp.data.models.ForecastWeatherState
 import com.example.weatherapp.data.repo.LocationRepository
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import java.util.Locale
 
 data class LocationData(
@@ -158,6 +161,28 @@ class WeatherViewModel(
         _location.value = LocationData(lat, lon)
         fetchWeatherData(lat, lon)
     }
+
+    fun fetchAndSaveFavoritePlace(context: Context, lat: Double, lon: Double, placeName: String) {
+        viewModelScope.launch {
+            val currentWeather = weatherRepository.getCurrentWeather(lat, lon, "en", "metric", isOnline = true).firstOrNull()
+            val forecastWeather = weatherRepository.getForecastWeather(lat, lon, "en", "metric", isOnline = true).firstOrNull()
+
+            if (currentWeather != null && forecastWeather != null) {
+                val favoritePlace = FavoritePlace(
+                    cityName = placeName,
+                    coord = currentWeather.coord,
+                    main = currentWeather.main,
+                    clouds = currentWeather.clouds,
+                    weather = currentWeather.weather,
+                    wind = currentWeather.wind,
+                    forecast = forecastWeather.list,
+                    city = forecastWeather.city
+                )
+                weatherRepository.saveFavoritePlace(favoritePlace)
+            }
+        }
+    }
+
 }
 
 class WeatherViewModelFactory(

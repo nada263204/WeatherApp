@@ -1,6 +1,5 @@
 package com.example.weatherapp.setting
 
-import androidx.compose.foundation.gestures.snapping.SnapPosition.Center.position
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -16,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.weatherapp.R
-import com.example.weatherapp.Utiles.LocationUtils
+import com.example.weatherapp.utiles.LocationUtils
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 
