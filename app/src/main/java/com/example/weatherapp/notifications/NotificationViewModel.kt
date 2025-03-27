@@ -52,3 +52,4 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 }
+

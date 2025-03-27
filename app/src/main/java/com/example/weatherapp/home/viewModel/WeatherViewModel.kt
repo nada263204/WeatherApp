@@ -183,6 +183,22 @@ class WeatherViewModel(
         }
     }
 
+    companion object {
+        @Volatile
+        private var INSTANCE: WeatherViewModel? = null
+
+        fun getInstance(
+            weatherRepository: WeatherRepository,
+            locationRepository: LocationRepository,
+            settingsViewModel: SettingsViewModel
+        ): WeatherViewModel {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: WeatherViewModel(weatherRepository, locationRepository, settingsViewModel).also { INSTANCE = it }
+            }
+        }
+    }
+
+
 }
 
 class WeatherViewModelFactory(
