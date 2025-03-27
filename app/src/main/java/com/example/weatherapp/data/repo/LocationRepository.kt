@@ -8,5 +8,9 @@ class LocationRepository(private val locationUtils: LocationUtils) {
 
     val locationLiveData: LiveData<Location?> = locationUtils.locationLiveData
 
-    //Geocoder
+    fun getLastKnownLocation(): Location? {
+        return locationLiveData.value
+    }
+
+    //geocoder
 }

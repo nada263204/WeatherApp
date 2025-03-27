@@ -28,7 +28,6 @@ class WeatherRepositoryImpl(
                 val response = remoteDataSource.getCurrentWeather(lat, lon, lang, units).firstOrNull()
                 emit(response)
             } else {
-                // Fetch from the favorite places if offline
                 val favoritePlaces = localDataSource.getAllFavoritePlaces()
                 emit(favoritePlaces.map { it.find { place -> place.coord.lat == lat && place.coord.lon == lon }?.let { toCurrentWeather(it) } }.firstOrNull())
             }

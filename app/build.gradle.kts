@@ -96,7 +96,7 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:2.15.0")
 
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
-
-
+    implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
+    implementation ("androidx.work:work-runtime-ktx:2.7.1")
 
 }

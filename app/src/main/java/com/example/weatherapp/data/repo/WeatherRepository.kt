@@ -12,4 +12,6 @@ interface WeatherRepository {
     fun getFavoritePlaces(): Flow<List<FavoritePlace>>
     suspend fun saveFavoritePlace(place: FavoritePlace)
     suspend fun deleteFavoritePlace(place: FavoritePlace)
+
+
 }

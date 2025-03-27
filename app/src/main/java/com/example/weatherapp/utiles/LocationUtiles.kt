@@ -4,35 +4,40 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.os.Looper
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.*
 
-class LocationUtils (context: Context){
-    private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-    val locationLiveData = MutableLiveData<Location?>()
+class LocationUtils(context: Context) {
+    private val fusedLocationClient: FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(context)
 
-     init {
-         fetchLocation()
+    private val _locationLiveData = MutableLiveData<Location?>()
+    val locationLiveData: LiveData<Location?> get() = _locationLiveData
+
+    init {
+        fetchLocation()
     }
-
 
     @SuppressLint("MissingPermission")
-     fun fetchLocation() {
+    fun fetchLocation() {
         val locationRequest = LocationRequest.Builder(0)
-            .apply { setPriority(Priority.PRIORITY_HIGH_ACCURACY) }.build()
+            .apply { setPriority(Priority.PRIORITY_HIGH_ACCURACY) }
+            .build()
+
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                locationLiveData.value = locationResult.lastLocation
-                //Log.i("Locationnn", "onLocationResult: ${locationLiveData.value}")
+                _locationLiveData.value = locationResult.lastLocation
             }
         }
-        fusedLocationClient.requestLocationUpdates (locationRequest, locationCallback, Looper.getMainLooper())
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
-    //fun getLocation(): LiveData<Location?> = locationLiveData
+    @SuppressLint("MissingPermission")
+    fun getLastKnownLocation(callback: (Location?) -> Unit) {
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location -> callback(location) }
+            .addOnFailureListener { callback(null) }
+    }
 }
