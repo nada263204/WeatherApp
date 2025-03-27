@@ -16,6 +16,7 @@ import com.example.weatherapp.data.remote.RetrofitClient
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.data.repo.WeatherRepositoryImpl
 import com.example.weatherapp.navigations.MainScreen
+import com.example.weatherapp.notifications.NotificationDatabase
 import com.example.weatherapp.setting.LanguageChangeHelper
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import com.example.weatherapp.utiles.LocationUtils
@@ -38,7 +39,8 @@ class MainActivity : ComponentActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         val database = AppDatabase.getDatabase(this)
-        val localDataSource = LocalDataSourceImpl(database.favoritePlaceDao())
+        val notificationDatabase = NotificationDatabase.getDatabase(this)
+        val localDataSource = LocalDataSourceImpl(database.favoritePlaceDao(),notificationDatabase.notificationDao())
 
         val remoteDataSource = RemoteDataSourceImpl(services = RetrofitClient.service)
         weatherRepository = WeatherRepositoryImpl.getInstance(remoteDataSource,localDataSource)

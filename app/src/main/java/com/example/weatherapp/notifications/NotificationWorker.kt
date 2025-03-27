@@ -9,20 +9,20 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.example.weatherapp.data.local.AppDatabase
-import com.example.weatherapp.data.local.LocalDataSource
 import com.example.weatherapp.data.local.LocalDataSourceImpl
-import com.example.weatherapp.data.models.CurrentWeatherState
 import com.example.weatherapp.data.remote.RemoteDataSourceImpl
 import com.example.weatherapp.data.remote.RetrofitClient
-import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.data.repo.WeatherRepositoryImpl
-import com.example.weatherapp.home.viewModel.WeatherViewModel
 import com.example.weatherapp.utiles.LocationUtils
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.TimeUnit
 
 class NotificationWorker(
     context: Context,
@@ -36,8 +36,10 @@ class NotificationWorker(
         val context = applicationContext
         val remoteDataSource = RemoteDataSourceImpl(RetrofitClient.service)
         val database = AppDatabase.getDatabase(context)
+        val notificationDatabase = NotificationDatabase.getDatabase(context)
         val favoritePlaceDao = database.favoritePlaceDao()
-        val localDataSource = LocalDataSourceImpl(favoritePlaceDao)
+        val notificationDao = notificationDatabase.notificationDao()
+        val localDataSource = LocalDataSourceImpl(favoritePlaceDao,notificationDao)
         val weatherRepository = WeatherRepositoryImpl(remoteDataSource, localDataSource)
 
         val locationUtils = LocationUtils(context)
@@ -57,7 +59,14 @@ class NotificationWorker(
 
                     val weatherDescription =
                         weatherData?.weather?.firstOrNull()?.description ?: "Unknown Weather"
-                    sendNotification(weatherDescription)
+
+
+                    val time = inputData.getString("notification_time")
+
+                    if (!time.isNullOrEmpty()) {
+                        sendNotification(weatherDescription)
+                        deleteNotificationFromDatabase(time)
+                    }
                 }
             } else {
                 Log.d("NotificationWorker", "No location found")
@@ -65,6 +74,15 @@ class NotificationWorker(
         }
 
         return Result.success()
+    }
+    private fun deleteNotificationFromDatabase(time: String) {
+        val notificationDatabase = NotificationDatabase.getDatabase(applicationContext)
+        val notificationDao = notificationDatabase.notificationDao()
+
+        runBlocking {
+            notificationDao.deleteNotificationByTime(time)
+            Log.d("NotificationWorker", "Notification deleted from database with time: $time")
+        }
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -93,5 +111,33 @@ class NotificationWorker(
             .build()
 
         NotificationManagerCompat.from(applicationContext).notify(notificationId, notification)
+        scheduleDeletion(notificationId)
+    }
+
+    private fun scheduleDeletion(notificationId: Int) {
+        val deleteWorkRequest = OneTimeWorkRequestBuilder<DeleteNotificationWorker>()
+            .setInitialDelay(1, TimeUnit.HOURS)
+            .setInputData(workDataOf("notification_id" to notificationId))
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueue(deleteWorkRequest)
+    }
+}
+
+class DeleteNotificationWorker(
+    context: Context,
+    workerParams: WorkerParameters
+) : Worker(context, workerParams) {
+
+    override fun doWork(): Result {
+        val notificationId = inputData.getInt("notification_id", -1)
+        if (notificationId != -1) {
+            val notificationDao = NotificationDatabase.getDatabase(applicationContext).notificationDao()
+            runBlocking {
+                notificationDao.deleteNotificationById(notificationId)
+            }
+            Log.d("DeleteNotificationWorker", "Deleted notification with ID: $notificationId")
+        }
+        return Result.success()
     }
 }

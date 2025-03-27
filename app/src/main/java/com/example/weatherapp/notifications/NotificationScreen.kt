@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.util.*
 
@@ -27,7 +28,7 @@ fun NotificationScreen(viewModel: NotificationViewModel = viewModel()) {
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val notifications by viewModel.notifications.collectAsState(emptyList())
+    val notifications by viewModel.notifications.collectAsStateWithLifecycle()
 
     Scaffold(
         floatingActionButton = {
@@ -54,7 +55,9 @@ fun NotificationScreen(viewModel: NotificationViewModel = viewModel()) {
             } else {
                 LazyColumn {
                     items(notifications) { notification ->
-                        NotificationCard(notification)
+                        NotificationCard(notification){ id ->
+                            viewModel.deleteNotification(id)
+                        }
                     }
                 }
             }
@@ -142,16 +145,27 @@ fun TimePicker(selectedTime: String, onTimeSelected: (String) -> Unit) {
 }
 
 @Composable
-fun NotificationCard(notification: NotificationEntity) {
+fun NotificationCard(notification: NotificationEntity, onDelete: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
             Text("Date: ${notification.date}", fontSize = 16.sp)
             Text("Time: ${notification.time}", fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { onDelete(notification.time) },
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)
+            ) {
+                Text("Delete")
+            }
         }
     }
 }
+

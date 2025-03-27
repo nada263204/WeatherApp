@@ -18,12 +18,14 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     val notifications: StateFlow<List<NotificationEntity>> = _notifications
 
     init {
-        fetchNotifications()
+        observeNotifications()
     }
-
-    private fun fetchNotifications() {
+    private fun observeNotifications() {
         viewModelScope.launch {
-            _notifications.value = db.getAllNotifications()
+            db.getAllNotifications()
+                .collect { notificationList ->
+                    _notifications.value = notificationList
+                }
         }
     }
 
@@ -31,7 +33,6 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
         viewModelScope.launch {
             val notification = NotificationEntity(date = date, time = time)
             db.insertNotification(notification)
-            fetchNotifications()
             scheduleNotification(date, time)
         }
     }
@@ -46,10 +47,18 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
         if (delay > 0) {
             val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
                 .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .setInputData(workDataOf("notification_time" to time))
                 .build()
 
             WorkManager.getInstance(getApplication()).enqueue(workRequest)
         }
     }
+
+    fun deleteNotification(time: String) {
+        viewModelScope.launch {
+            db.deleteNotificationByTime(time)
+        }
+    }
+
 }
 
