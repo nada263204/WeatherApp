@@ -1,7 +1,6 @@
 package com.example.weatherapp.setting
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,9 +16,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
 
-class SettingsViewModel(private val context: Context,private val locationRepository: LocationRepository) : ViewModel() {
-    private val _selectedLocation = MutableStateFlow("GPS")
-    val selectedLocation: StateFlow<String> = _selectedLocation
+class SettingsViewModel(private val context: Context, private val locationRepository: LocationRepository) : ViewModel() {
+    private val sharedPreferences = context.getSharedPreferences("WeatherPreferences", Context.MODE_PRIVATE)
+    private val _selectedLocation = MutableStateFlow(getSavedLocationMethod(context))
+    val selectedLocation: StateFlow<String> = _selectedLocation.asStateFlow()
 
     private val _currentLocation = MutableStateFlow<LocationData?>(null)
     val currentLocation: StateFlow<LocationData?> = _currentLocation.asStateFlow()
@@ -36,26 +36,49 @@ class SettingsViewModel(private val context: Context,private val locationReposit
     private val _weatherData = MutableStateFlow<WeatherData?>(null)
     val weatherData: StateFlow<WeatherData?> = _weatherData
 
-    fun getFormattedTemperature(tempInCelsius: Double): String {
-        return when (_selectedTemperatureUnit.value) {
-            "Kelvin" -> "${(tempInCelsius + 273.15).roundToInt()} K"
-            "Fahrenheit" -> "${((tempInCelsius * 9 / 5) + 32).roundToInt()}°F"
-            else -> "${tempInCelsius.roundToInt()}°C"
+    init {
+        if (_selectedLocation.value == "GPS") {
+            fetchCurrentLocation()
+        }
+        _selectedLocation.value = getSavedLocationMethod(context)
+        if (_selectedLocation.value == "GPS") {
+            fetchCurrentLocation()
         }
     }
 
-    fun getFormattedWindSpeed(windInKmH: Double): String {
-        return when (_selectedWindSpeedUnit.value) {
-            "mph" -> "${(windInKmH * 0.621371).roundToInt()} mph"
-            else -> "${windInKmH.roundToInt()} km/h"
+    private fun getSavedLocationMethod(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(LOCATION_METHOD_KEY, "GPS") ?: "GPS"
+    }
+
+    private fun saveLocationMethod(method: String) {
+        sharedPreferences.edit {
+            putString("location_method", method)
         }
     }
 
-//    fun updateLocation(location: String) {
-//        viewModelScope.launch {
-//            _selectedLocation.emit(location)
+
+//    fun getFormattedTemperature(tempInCelsius: Double): String {
+//        return when (_selectedTemperatureUnit.value) {
+//            "Kelvin" -> "${(tempInCelsius + 273.15).roundToInt()} K"
+//            "Fahrenheit" -> "${((tempInCelsius * 9 / 5) + 32).roundToInt()}°F"
+//            else -> "${tempInCelsius.roundToInt()}°C"
 //        }
 //    }
+//
+//    fun getFormattedWindSpeed(windInKmH: Double): String {
+//        return when (_selectedWindSpeedUnit.value) {
+//            "mph" -> "${(windInKmH * 0.621371).roundToInt()} mph"
+//            else -> "${windInKmH.roundToInt()} km/h"
+//        }
+//    }
+
+    fun updateLocation(option: String) {
+        viewModelScope.launch {
+            sharedPreferences.edit().putString("location_method", option).apply()
+            _selectedLocation.emit(option)
+        }
+    }
 
     fun updateTemperatureUnit(unit: String) {
         viewModelScope.launch {
@@ -65,8 +88,6 @@ class SettingsViewModel(private val context: Context,private val locationReposit
             val defaultWindSpeedUnit = if (unit == "Kelvin") "mph" else "m/s"
             _selectedWindSpeedUnit.emit(defaultWindSpeedUnit)
             saveWindSpeedUnit(context, defaultWindSpeedUnit)
-
-            Log.i("Settings", "Temperature unit updated: $unit, Wind speed unit updated: $defaultWindSpeedUnit")
         }
     }
 
@@ -79,8 +100,6 @@ class SettingsViewModel(private val context: Context,private val locationReposit
                 _selectedTemperatureUnit.emit("Kelvin")
                 saveTemperatureUnit(context, "Kelvin")
             }
-
-            Log.i("Settings", "Wind speed unit updated: $unit, Temperature unit updated: ${_selectedTemperatureUnit.value}")
         }
     }
 
@@ -92,10 +111,44 @@ class SettingsViewModel(private val context: Context,private val locationReposit
         }
     }
 
+    private fun fetchCurrentLocation() {
+        viewModelScope.launch {
+            locationRepository.locationLiveData.asFlow().collectLatest { location ->
+                location?.let {
+                    val locationData = LocationData(it.latitude, it.longitude)
+                    _currentLocation.value = locationData
+
+
+                }
+            }
+        }
+    }
+
+    fun saveLocationData(lat: Double, lon: Double) {
+        sharedPreferences.edit {
+            putFloat("saved_lat", lat.toFloat())
+            putFloat("saved_lon", lon.toFloat())
+        }
+    }
+
+
+    fun getSavedLocationData(): LocationData? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val lat = prefs.getFloat("saved_lat", Float.MIN_VALUE)
+        val lon = prefs.getFloat("saved_lon", Float.MIN_VALUE)
+        return if (lat != Float.MIN_VALUE && lon != Float.MIN_VALUE) {
+            LocationData(lat.toDouble(), lon.toDouble())
+        } else {
+            null
+        }
+    }
+
+
     companion object {
         private const val PREFS_NAME = "weather_prefs"
         private const val TEMP_UNIT_KEY = "temperature_unit"
         private const val WIND_SPEED_UNIT_KEY = "wind_speed_unit"
+        private const val LOCATION_METHOD_KEY = "location_method"
 
         private fun getSavedTemperatureUnit(context: Context): String {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -117,34 +170,25 @@ class SettingsViewModel(private val context: Context,private val locationReposit
             prefs.edit { putString(WIND_SPEED_UNIT_KEY, unit) }
         }
 
+        private fun getSavedLocationMethod(context: Context): String {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getString(LOCATION_METHOD_KEY, "GPS") ?: "GPS"
+        }
 
-    }
-
-    fun updateLocation(option: String) {
-        _selectedLocation.value = option
-        if (option == "GPS") {
-            fetchCurrentLocation()
+        private fun saveLocationMethod(context: Context, method: String) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit { putString(LOCATION_METHOD_KEY, method) }
         }
     }
-
-    private fun fetchCurrentLocation() {
-        viewModelScope.launch {
-            locationRepository.locationLiveData.asFlow().collectLatest { location ->
-                location?.let {
-                    val locationData = LocationData(it.latitude, it.longitude)
-                    _currentLocation.value = locationData
-                }
-            }
-        }
-    }
-
 }
 
-class SettingsViewModelFactory(private val context: Context,private val locationRepository: LocationRepository) : ViewModelProvider.Factory {
+
+
+class SettingsViewModelFactory(private val context: Context, private val locationRepository: LocationRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SettingsViewModel(context,locationRepository) as T
+            return SettingsViewModel(context, locationRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

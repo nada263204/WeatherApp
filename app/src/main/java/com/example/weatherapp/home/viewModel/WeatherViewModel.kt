@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.Locale
 
@@ -51,34 +52,70 @@ class WeatherViewModel(
     val isUserSelectedLocation: StateFlow<Boolean> = _isUserSelectedLocation.asStateFlow()
 
     init {
-        fetchLastKnownLocation()
-        observeLocationUpdates()
+        //fetchLastKnownLocation()
+        //observeLocationUpdates()
         observeSettingsChanges()
+        restorePreviousState()
     }
 
-    private fun observeSettingsChanges() {
+    private fun restorePreviousState() {
         viewModelScope.launch {
-            settingsViewModel.selectedTemperatureUnit.collectLatest { unit ->
-                _temperatureUnit.value = when (unit) {
-                    "Kelvin" -> "K"
-                    "Fahrenheit" -> "°F"
-                    else -> "°C"
-                }
-
-                _location.value?.let { loc ->
-                    fetchWeatherData(loc.latitude, loc.longitude)
+            val locationMethod = settingsViewModel.selectedLocation.firstOrNull()
+            if (locationMethod == "GPS") {
+                enableGpsLocation()
+            } else {
+                val savedLocation = settingsViewModel.getSavedLocationData()
+                if (savedLocation != null) {
+                    _location.value = savedLocation
+                    fetchWeatherData(savedLocation.latitude, savedLocation.longitude)
+                    _isUserSelectedLocation.value = true
+                } else {
+                    enableGpsLocation()
                 }
             }
         }
     }
 
 
+//    private fun observeSettingsChanges() {
+//        viewModelScope.launch {
+//            settingsViewModel.selectedTemperatureUnit.combine(settingsViewModel.selectedLocation) { unit, locationMethod ->
+//                Pair(unit, locationMethod)
+//            }.collectLatest { (unit, locationMethod) ->
+//                Log.d("SettingsObserver", "Location Method: $locationMethod, Temp Unit: $unit")
+//
+//                if (locationMethod == "GPS" && !_isUserSelectedLocation.value) {
+//                    enableGpsLocation()
+//                }
+//
+//                _temperatureUnit.value = when (unit) {
+//                    "Kelvin" -> "K"
+//                    "Fahrenheit" -> "°F"
+//                    else -> "°C"
+//                }
+//
+//                _location.value?.let { loc ->
+//                    fetchWeatherData(loc.latitude, loc.longitude)
+//                }
+//            }
+//        }
+//    }
+
+    private fun observeSettingsChanges() {
+        viewModelScope.launch {
+            settingsViewModel.selectedLocation.collectLatest { locationMethod ->
+                if (locationMethod == "GPS" && !_isUserSelectedLocation.value) {
+                    enableGpsLocation()
+                }
+            }
+        }
+    }
     private fun observeLocationUpdates() {
         viewModelScope.launch {
             locationRepository.locationLiveData.asFlow().collectLatest { location ->
-                if (!_isUserSelectedLocation.value) {
-                    location?.let {
-                        val locationData = LocationData(it.latitude, it.longitude)
+                location?.let {
+                    val locationData = LocationData(it.latitude, it.longitude)
+                    if (!_isUserSelectedLocation.value && _location.value != locationData) {
                         _location.value = locationData
                         fetchWeatherData(locationData.latitude, locationData.longitude)
                     }
@@ -87,18 +124,26 @@ class WeatherViewModel(
         }
     }
 
+    fun enableGpsLocation() {
+        _isUserSelectedLocation.value = false
+        fetchLastKnownLocation()
+        settingsViewModel.updateLocation("GPS")
+    }
 
     private fun fetchLastKnownLocation() {
         viewModelScope.launch {
             locationRepository.locationLiveData.asFlow().collectLatest { location ->
                 location?.let {
                     val locationData = LocationData(it.latitude, it.longitude)
-                    _location.value = locationData
-                    fetchForecastWeather(locationData.latitude, locationData.longitude)
+                    if (!_isUserSelectedLocation.value && _location.value != locationData) {
+                        _location.emit(locationData)
+                        fetchWeatherData(locationData.latitude, locationData.longitude)
+                    }
                 }
             }
         }
     }
+
 
 
     private fun fetchWeatherData(lat: Double, lon: Double) {
@@ -160,7 +205,11 @@ class WeatherViewModel(
         _isUserSelectedLocation.value = true
         _location.value = LocationData(lat, lon)
         fetchWeatherData(lat, lon)
+        settingsViewModel.updateLocation("Map")
+        settingsViewModel.saveLocationData(lat, lon)
     }
+
+
 
     fun fetchAndSaveFavoritePlace(context: Context, lat: Double, lon: Double, placeName: String) {
         viewModelScope.launch {

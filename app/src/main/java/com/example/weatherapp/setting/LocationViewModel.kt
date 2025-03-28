@@ -14,7 +14,6 @@ import java.io.IOException
 import java.util.Locale
 
 class LocationViewModel : ViewModel() {
-
     private val _selectedPosition = MutableStateFlow<LatLng?>(null)
     val selectedPosition: StateFlow<LatLng?> = _selectedPosition
 

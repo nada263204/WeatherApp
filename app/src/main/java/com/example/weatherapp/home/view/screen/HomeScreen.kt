@@ -37,7 +37,12 @@ import java.util.*
 fun HomeScreen(viewModel: WeatherViewModel) {
     val currentWeatherState by viewModel.currentWeatherState.collectAsState()
     val forecastWeatherState by viewModel.forecastWeatherState.collectAsState()
-
+    val location by viewModel.location.collectAsState()
+    LaunchedEffect(location) {
+        location?.let {
+            viewModel.fetchCurrentWeather(it.latitude, it.longitude)
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -183,8 +188,6 @@ fun WeatherDailyForecastSection(forecastList: List<ListItem>) {
         }
     }
 }
-
-
 
 @Composable
 fun CityAndDateSection(city: String) {

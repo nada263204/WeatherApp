@@ -22,7 +22,6 @@ import com.example.weatherapp.ui.theme.WeatherAppTheme
 import com.example.weatherapp.utiles.LocationUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
