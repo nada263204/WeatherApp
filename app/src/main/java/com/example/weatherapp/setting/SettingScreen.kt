@@ -20,12 +20,17 @@ import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 
 @Composable
-fun SettingsScreen(navController: NavController,viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current,LocationRepository(locationUtils = LocationUtils(LocalContext.current)))), weatherViewModel: WeatherViewModel) {
+fun SettingsScreen(
+    navController: NavController,
+    viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current, LocationRepository(locationUtils = LocationUtils(LocalContext.current)))),
+    weatherViewModel: WeatherViewModel
+) {
     val selectedLocation by viewModel.selectedLocation.collectAsState()
     val selectedTemperatureUnit by viewModel.selectedTemperatureUnit.collectAsState()
     val selectedWindSpeedUnit by viewModel.selectedWindSpeedUnit.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val currentLocation by viewModel.currentLocation.collectAsState()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -47,9 +52,9 @@ fun SettingsScreen(navController: NavController,viewModel: SettingsViewModel = v
                                 viewModel.updateLocation(option)
                                 if (option == "Map") {
                                     navController.navigate("map")
-                                }else if (option == "GPS") {
+                                } else if (option == "GPS") {
                                     currentLocation?.let { location ->
-                                        weatherViewModel.setUserSelectedLocation(location.latitude, location.longitude)
+                                        weatherViewModel.setUserSelectedLocation(location.latitude, location.longitude,context)
                                     }
                                 }
                             }
@@ -58,15 +63,9 @@ fun SettingsScreen(navController: NavController,viewModel: SettingsViewModel = v
                 ) {
                     RadioButton(
                         selected = (selectedLocation == option),
-                        onClick = {
-                            viewModel.updateLocation(option)
-                            if (option == "Map") {
-                                navController.navigate("map")
-                            }
-                        }
+                        onClick = null
                     )
                     Text(option, Modifier.padding(start = 8.dp), color = Color.White)
-
                 }
             }
         }
@@ -83,7 +82,6 @@ fun SettingsScreen(navController: NavController,viewModel: SettingsViewModel = v
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(stringResource(R.string.wind_speed_unit), fontSize = 18.sp, color = Color.White)
-
         DropdownMenuSetting(
             options = if (selectedTemperatureUnit == "Kelvin") listOf("mph") else listOf("m/s", "mph"),
             selectedOption = selectedWindSpeedUnit,

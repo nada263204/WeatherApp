@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.weatherapp.PreferenceManager
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
@@ -123,7 +124,9 @@ fun MapScreen(
 
                             Button(
                                 onClick = {
-                                    weatherViewModel.setUserSelectedLocation(position.latitude, position.longitude)
+                                    weatherViewModel.setUserSelectedLocation(position.latitude, position.longitude,context)
+                                    val preferenceManager = PreferenceManager(context)
+                                    preferenceManager.saveLocation(position.latitude, position.longitude)
                                     navController.popBackStack()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor)

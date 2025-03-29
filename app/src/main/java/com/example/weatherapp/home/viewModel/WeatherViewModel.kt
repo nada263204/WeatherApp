@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import com.example.weatherapp.PreferenceManager
 import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.data.models.CurrentWeatherState
 import com.example.weatherapp.data.models.ForecastWeatherState
@@ -18,8 +19,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.Locale
+
 
 data class LocationData(
     val latitude: Double,
@@ -29,9 +32,9 @@ data class LocationData(
 class WeatherViewModel(
     private val weatherRepository: WeatherRepository,
     private val locationRepository: LocationRepository,
-    private val settingsViewModel: SettingsViewModel
+    private val settingsViewModel: SettingsViewModel,
+    private val context: Context
 ) : ViewModel() {
-
     private val _location = MutableStateFlow<LocationData?>(null)
     val location: StateFlow<LocationData?> = _location.asStateFlow()
 
@@ -50,37 +53,41 @@ class WeatherViewModel(
     private val _isUserSelectedLocation = MutableStateFlow(false)
     val isUserSelectedLocation: StateFlow<Boolean> = _isUserSelectedLocation.asStateFlow()
 
+    private val preferenceManager = PreferenceManager(context)
+
     init {
-        fetchLastKnownLocation()
-        observeLocationUpdates()
-        observeSettingsChanges()
+        restorePreviousState(context)
     }
 
-    private fun observeSettingsChanges() {
+    private fun restorePreviousState(context: Context) {
         viewModelScope.launch {
-            settingsViewModel.selectedTemperatureUnit.collectLatest { unit ->
-                _temperatureUnit.value = when (unit) {
-                    "Kelvin" -> "K"
-                    "Fahrenheit" -> "°F"
-                    else -> "°C"
-                }
+            //val locationMethod = settingsViewModel.selectedLocation.firstOrNull()
+            val savedLocation = preferenceManager.getLocation()
 
-                _location.value?.let { loc ->
-                    fetchWeatherData(loc.latitude, loc.longitude)
-                }
+           if (savedLocation != null) {
+                _location.value = LocationData(savedLocation.first, savedLocation.second)
+                fetchWeatherData(savedLocation.first, savedLocation.second, context)
+                _isUserSelectedLocation.value = true
+            } else {
+                enableGpsLocation()
             }
         }
     }
 
+    fun enableGpsLocation() {
+        _isUserSelectedLocation.value = false
+        fetchLastKnownLocation(context)
+        settingsViewModel.updateLocation("GPS")
+    }
 
-    private fun observeLocationUpdates() {
+    private fun fetchLastKnownLocation(context: Context) {
         viewModelScope.launch {
             locationRepository.locationLiveData.asFlow().collectLatest { location ->
-                if (!_isUserSelectedLocation.value) {
-                    location?.let {
-                        val locationData = LocationData(it.latitude, it.longitude)
-                        _location.value = locationData
-                        fetchWeatherData(locationData.latitude, locationData.longitude)
+                location?.let {
+                    val locationData = LocationData(it.latitude, it.longitude)
+                    if (!_isUserSelectedLocation.value && _location.value != locationData) {
+                        _location.emit(locationData)
+                        fetchWeatherData(locationData.latitude, locationData.longitude,context)
                     }
                 }
             }
@@ -88,27 +95,19 @@ class WeatherViewModel(
     }
 
 
-    private fun fetchLastKnownLocation() {
-        viewModelScope.launch {
-            locationRepository.locationLiveData.asFlow().collectLatest { location ->
-                location?.let {
-                    val locationData = LocationData(it.latitude, it.longitude)
-                    _location.value = locationData
-                    fetchForecastWeather(locationData.latitude, locationData.longitude)
-                }
-            }
-        }
-    }
 
-
-    private fun fetchWeatherData(lat: Double, lon: Double) {
-        fetchCurrentWeather(lat, lon)
+    private fun fetchWeatherData(lat: Double, lon: Double,context: Context) {
+        fetchCurrentWeather(lat, lon,context)
         fetchForecastWeather(lat, lon)
     }
 
-    fun fetchCurrentWeather(lat: Double, lon: Double) {
-        val lang = Locale.getDefault().language
-        val units = when (settingsViewModel.selectedTemperatureUnit.value) {
+    fun fetchCurrentWeather(lat: Double, lon: Double,context: Context) {
+        val preferenceManager = PreferenceManager(context)
+        val lang = preferenceManager.getLanguage()
+
+        val savedUnit = preferenceManager.getTemperatureUnit()
+
+        val units = when (savedUnit) {
             "Kelvin" -> "standard"
             "Fahrenheit" -> "imperial"
             else -> "metric"
@@ -132,7 +131,10 @@ class WeatherViewModel(
 
     fun fetchForecastWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
-            val lang = Locale.getDefault().language
+            val preferenceManager = PreferenceManager(context)
+            val lang = preferenceManager.getLanguage()
+
+            val savedUnit = preferenceManager.getTemperatureUnit()
             val units = when (settingsViewModel.selectedTemperatureUnit.value) {
                 "Kelvin" -> "standard"
                 "Fahrenheit" -> "imperial"
@@ -156,10 +158,17 @@ class WeatherViewModel(
         }
     }
 
-    fun setUserSelectedLocation(lat: Double, lon: Double) {
+    fun setUserSelectedLocation(lat: Double, lon: Double, context: Context) {
         _isUserSelectedLocation.value = true
         _location.value = LocationData(lat, lon)
-        fetchWeatherData(lat, lon)
+        fetchWeatherData(lat, lon, context)
+
+
+
+        preferenceManager.saveLocation(lat, lon)
+
+        settingsViewModel.updateLocation("Map")
+        settingsViewModel.saveLocationData(lat, lon)
     }
 
     fun fetchAndSaveFavoritePlace(context: Context, lat: Double, lon: Double, placeName: String) {
@@ -190,26 +199,26 @@ class WeatherViewModel(
         fun getInstance(
             weatherRepository: WeatherRepository,
             locationRepository: LocationRepository,
-            settingsViewModel: SettingsViewModel
+            settingsViewModel: SettingsViewModel,
+            context: Context
         ): WeatherViewModel {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: WeatherViewModel(weatherRepository, locationRepository, settingsViewModel).also { INSTANCE = it }
+                INSTANCE ?: WeatherViewModel(weatherRepository, locationRepository, settingsViewModel,context).also { INSTANCE = it }
             }
         }
     }
-
-
 }
 
 class WeatherViewModelFactory(
     private val weatherRepository: WeatherRepository,
     private val locationRepository: LocationRepository,
-    private val settingsViewModel: SettingsViewModel
+    private val settingsViewModel: SettingsViewModel,
+    private val context: Context
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(WeatherViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return WeatherViewModel(weatherRepository, locationRepository, settingsViewModel) as T
+            return WeatherViewModel(weatherRepository, locationRepository, settingsViewModel,context) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
