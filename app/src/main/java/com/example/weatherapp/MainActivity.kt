@@ -29,8 +29,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var weatherRepository: WeatherRepositoryImpl
     private lateinit var locationRepository: LocationRepository
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

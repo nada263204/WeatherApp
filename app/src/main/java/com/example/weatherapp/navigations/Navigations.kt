@@ -1,5 +1,6 @@
 package com.example.weatherapp.navigations
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,7 +55,7 @@ fun MainScreen(
     val weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModelFactory(
         weatherRepository,
         locationRepository,
-        settingsViewModel
+        settingsViewModel,context
     ))
 
     val favoriteViewModel: FavoriteViewModel = viewModel(factory = FavoriteViewModelFactory(weatherRepository))
@@ -139,7 +140,7 @@ fun NavHostContainer(
         startDestination = "home",
         modifier = modifier
     ) {
-        composable("home") { HomeScreen(viewModel) }
+        composable("home") { HomeScreen(viewModel, context = LocalContext.current) }
         composable("search") { FavoriteScreen(navController, favViewModel,viewModel) }
         composable("notification") { NotificationScreen() }
         composable("settings") { SettingsScreen(

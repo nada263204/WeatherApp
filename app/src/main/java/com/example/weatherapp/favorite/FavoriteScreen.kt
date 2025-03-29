@@ -1,5 +1,6 @@
 package com.example.weatherapp.favorite
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -25,6 +27,7 @@ fun FavoriteScreen(
     favoriteViewModel: FavoriteViewModel,
     weatherViewModel: WeatherViewModel
 ) {
+    val context = LocalContext.current
     var searchText by remember { mutableStateOf("") }
     val favoritePlaces by favoriteViewModel.favoritePlaces.collectAsState()
 
@@ -66,7 +69,7 @@ fun FavoriteScreen(
                         place = place,
                         onDelete = { favoriteViewModel.removeFavoritePlace(it) },
                         onPlaceSelected = { lat, lon ->
-                            weatherViewModel.setUserSelectedLocation(lat, lon)
+                            weatherViewModel.setUserSelectedLocation(lat, lon, context)
                         }
                     )
                 }

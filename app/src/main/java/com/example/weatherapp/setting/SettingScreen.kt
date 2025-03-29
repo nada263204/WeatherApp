@@ -30,6 +30,7 @@ fun SettingsScreen(
     val selectedWindSpeedUnit by viewModel.selectedWindSpeedUnit.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val currentLocation by viewModel.currentLocation.collectAsState()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -53,7 +54,7 @@ fun SettingsScreen(
                                     navController.navigate("map")
                                 } else if (option == "GPS") {
                                     currentLocation?.let { location ->
-                                        weatherViewModel.setUserSelectedLocation(location.latitude, location.longitude)
+                                        weatherViewModel.setUserSelectedLocation(location.latitude, location.longitude,context)
                                     }
                                 }
                             }

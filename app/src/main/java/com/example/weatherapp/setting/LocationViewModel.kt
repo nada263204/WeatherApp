@@ -4,8 +4,10 @@ package com.example.weatherapp.setting
 import android.content.Context
 import android.location.Geocoder
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.weatherapp.PreferenceManager
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +22,12 @@ class LocationViewModel : ViewModel() {
     private val _placeName = MutableStateFlow("Unknown Place")
     val placeName: StateFlow<String> = _placeName
 
+
     fun setSelectedPosition(context: Context, latLng: LatLng) {
         _selectedPosition.value = latLng
         viewModelScope.launch {
+             //val preferenceManager = PreferenceManager(context)
+            //preferenceManager.saveLocation(latLng.latitude, latLng.longitude)
             _placeName.value = getPlaceNameFromLatLng(context, latLng.latitude, latLng.longitude)
         }
     }

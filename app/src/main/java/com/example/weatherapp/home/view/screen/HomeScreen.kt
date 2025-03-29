@@ -1,5 +1,6 @@
 package com.example.weatherapp.home.view.screen
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,13 +35,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun HomeScreen(viewModel: WeatherViewModel) {
+fun HomeScreen(viewModel: WeatherViewModel,context: Context) {
     val currentWeatherState by viewModel.currentWeatherState.collectAsState()
     val forecastWeatherState by viewModel.forecastWeatherState.collectAsState()
     val location by viewModel.location.collectAsState()
     LaunchedEffect(location) {
         location?.let {
-            viewModel.fetchCurrentWeather(it.latitude, it.longitude)
+            viewModel.fetchCurrentWeather(it.latitude, it.longitude,context)
         }
     }
     Column(

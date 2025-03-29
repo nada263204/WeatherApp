@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.example.weatherapp.PreferenceManager
 import com.example.weatherapp.data.local.AppDatabase
 import com.example.weatherapp.data.local.LocalDataSourceImpl
 import com.example.weatherapp.data.remote.RemoteDataSourceImpl
@@ -44,33 +45,28 @@ class NotificationWorker(
 
         val locationUtils = LocationUtils(context)
 
-        locationUtils.getLastKnownLocation { lastLocation ->
-            if (lastLocation != null) {
-                runBlocking {
-                    val weatherData = weatherRepository.getCurrentWeather(
-                        lastLocation.latitude,
-                        lastLocation.longitude,
-                        "en",
-                        "metric",
-                        isOnline = true
-                    ).firstOrNull()
+        val preferenceManager = PreferenceManager(context)
+        val location = preferenceManager.getLocation()
 
-                    Log.d("NotificationWorker", "Weather Data: $weatherData")
+        if (location != null) {
+            val (lat, lon) = location
+            runBlocking {
+                val weatherData = weatherRepository.getCurrentWeather(
+                    lat, lon, "en", "metric", isOnline = true
+                ).firstOrNull()
 
-                    val weatherDescription =
-                        weatherData?.weather?.firstOrNull()?.description ?: "Unknown Weather"
+                Log.d("NotificationWorker", "Weather Data: $weatherData")
 
+                val weatherDescription = weatherData?.weather?.firstOrNull()?.description ?: "Unknown Weather"
+                val time = inputData.getString("notification_time")
 
-                    val time = inputData.getString("notification_time")
-
-                    if (!time.isNullOrEmpty()) {
-                        sendNotification(weatherDescription)
-                        deleteNotificationFromDatabase(time)
-                    }
+                if (!time.isNullOrEmpty()) {
+                    sendNotification(weatherDescription)
+                    deleteNotificationFromDatabase(time)
                 }
-            } else {
-                Log.d("NotificationWorker", "No location found")
             }
+        } else {
+            Log.d("NotificationWorker", "No stored location found in SharedPreferences")
         }
 
         return Result.success()
@@ -84,6 +80,7 @@ class NotificationWorker(
             Log.d("NotificationWorker", "Notification deleted from database with time: $time")
         }
     }
+    
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun sendNotification(weatherInfo: String) {
