@@ -1,6 +1,7 @@
 package com.example.weatherapp.data.local
 
 
+import com.example.weatherapp.data.models.HomeScreenData
 import com.example.weatherapp.notifications.NotificationDao
 import com.example.weatherapp.notifications.NotificationEntity
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +9,8 @@ import kotlinx.coroutines.flow.flow
 
 class LocalDataSourceImpl(
     private val favoritePlaceDao: FavoritePlaceDao,
-    private val notificationDao: NotificationDao
+    private val notificationDao: NotificationDao,
+    private val homeScreenDao: HomeScreenDao,
 ) : LocalDataSource {
 
     override fun getAllFavoritePlaces(): Flow<List<FavoritePlace>> {
@@ -40,4 +42,17 @@ class LocalDataSourceImpl(
     override suspend fun deleteExpiredNotifications(currentTime: String) {
         notificationDao.deleteExpiredNotifications(currentTime)
     }
+
+    override fun getHomeScreenData(): Flow<List<HomeScreenData>> {
+        return homeScreenDao.getHomeScreenData()
+    }
+
+    override suspend fun insertHomeScreenData(data: HomeScreenData) {
+        homeScreenDao.insertHomeScreenData(data)
+    }
+
+    override suspend fun clearHomeScreenData() {
+        homeScreenDao.clearHomeScreenData()
+    }
+
 }
