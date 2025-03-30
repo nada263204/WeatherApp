@@ -31,112 +31,145 @@ import com.example.weatherapp.data.models.ListItem
 import com.example.weatherapp.data.models.Response5days3hours
 import com.example.weatherapp.data.models.ResponseCurrentWeather
 import com.example.weatherapp.home.viewModel.WeatherViewModel
+import com.example.weatherapp.utils.NetworkUtils
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun HomeScreen(viewModel: WeatherViewModel,context: Context) {
+fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
     val currentWeatherState by viewModel.currentWeatherState.collectAsState()
     val forecastWeatherState by viewModel.forecastWeatherState.collectAsState()
     val location by viewModel.location.collectAsState()
-    LaunchedEffect(location) {
-        location?.let {
-            viewModel.fetchCurrentWeather(it.latitude, it.longitude,context)
+
+    var isOffline by remember { mutableStateOf(!NetworkUtils.isNetworkAvailable(context)) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(isOffline) {
+        if (isOffline) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "No internet connection,you need connection to get fresh data",
+                    duration = SnackbarDuration.Short
+                )
+            }
         }
     }
-    Column(
+
+    LaunchedEffect(location, currentWeatherState) {
+        location?.let {
+            viewModel.fetchCurrentWeather(it.latitude, it.longitude, context)
+        }
+
+        if (currentWeatherState is CurrentWeatherState.Success) {
+            val cityName = (currentWeatherState as CurrentWeatherState.Success).data.name
+            location?.let {
+                viewModel.fetchAndSaveHome(context, it.longitude, it.latitude, cityName)
+            }
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        when (currentWeatherState) {
-            is CurrentWeatherState.Loading -> Text(
-                stringResource(R.string.loading),
-                fontSize = 18.sp,
-                color = Color.White
-            )
-
-            is CurrentWeatherState.Success -> {
-                val data = (currentWeatherState as CurrentWeatherState.Success).data
-                Spacer(modifier = Modifier.height(40.dp))
-
-                CityAndDateSection(data.name)
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                WeatherIcon(conditionId = data.weather[0].icon, description = data.weather[0].description)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                WeatherDetails(
-                    temp = data.main.temp.toString(),
-                    wind = data.wind.speed.toString(),
-                    humidity = data.main.humidity,
-                    clouds = data.clouds.all,
-                    pressure = data.main.pressure
+            .background(Color.Transparent),
+        containerColor = Color.Transparent
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            when (currentWeatherState) {
+                is CurrentWeatherState.Loading -> Text(
+                    stringResource(R.string.loading),
+                    fontSize = 18.sp,
+                    color = Color.White
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                is CurrentWeatherState.Success -> {
+                    val data = (currentWeatherState as CurrentWeatherState.Success).data
+                    Spacer(modifier = Modifier.height(40.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text(stringResource(R.string.today), fontSize = 20.sp, color = Color.White)
-                }
-                Spacer(modifier = Modifier.height(24.dp))
+                    CityAndDateSection(data.name)
 
-                when (forecastWeatherState) {
-                    is ForecastWeatherState.Success -> {
-                        val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
-                        WeatherForecastSection(forecastData.list)
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
-                    is ForecastWeatherState.Loading -> Text(
-                        stringResource(R.string.loading_forecast),
-                        fontSize = 18.sp,
-                        color = Color.White
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    WeatherIcon(conditionId = data.weather[0].icon, description = data.weather[0].description)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    WeatherDetails(
+                        temp = data.main.temp.toString(),
+                        wind = data.wind.speed.toString(),
+                        humidity = data.main.humidity,
+                        clouds = data.clouds.all,
+                        pressure = data.main.pressure
                     )
-                    is ForecastWeatherState.Failure -> Text(
-                        stringResource(R.string.failed_to_load_forecast),
-                        fontSize = 18.sp,
-                        color = Color.White
-                    )
-                }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text(stringResource(R.string.this_week), fontSize = 20.sp, color = Color.White)
-                }
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                when (forecastWeatherState) {
-                    is ForecastWeatherState.Success -> {
-                        val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
-                        WeatherDailyForecastSection(forecastData.list)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(stringResource(R.string.today), fontSize = 20.sp, color = Color.White)
                     }
-                    else -> {}
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    when (forecastWeatherState) {
+                        is ForecastWeatherState.Success -> {
+                            val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
+                            WeatherForecastSection(forecastData.list)
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+                        is ForecastWeatherState.Loading -> Text(
+                            stringResource(R.string.loading_forecast),
+                            fontSize = 18.sp,
+                            color = Color.White
+                        )
+                        is ForecastWeatherState.Failure -> Text(
+                            stringResource(R.string.failed_to_load_forecast),
+                            fontSize = 18.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(stringResource(R.string.this_week), fontSize = 20.sp, color = Color.White)
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    when (forecastWeatherState) {
+                        is ForecastWeatherState.Success -> {
+                            val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
+                            WeatherDailyForecastSection(forecastData.list)
+                        }
+                        else -> {}
+                    }
                 }
+
+                is CurrentWeatherState.Failure -> Text(
+                    stringResource(R.string.failed_to_load_weather),
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
             }
-
-            is CurrentWeatherState.Failure -> Text(
-                stringResource(R.string.failed_to_load_weather),
-                fontSize = 18.sp,
-                color = Color.White
-            )
         }
     }
 }
-
-
 
 @Composable
 fun WeatherForecastSection(forecastList: List<ListItem>) {

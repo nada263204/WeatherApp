@@ -11,6 +11,7 @@ import com.example.weatherapp.PreferenceManager
 import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.data.models.CurrentWeatherState
 import com.example.weatherapp.data.models.ForecastWeatherState
+import com.example.weatherapp.data.models.HomeScreenData
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.data.repo.WeatherRepository
 import com.example.weatherapp.setting.SettingsViewModel
@@ -64,7 +65,7 @@ class WeatherViewModel(
             //val locationMethod = settingsViewModel.selectedLocation.firstOrNull()
             val savedLocation = preferenceManager.getLocation()
 
-           if (savedLocation != null) {
+            if (savedLocation != null) {
                 _location.value = LocationData(savedLocation.first, savedLocation.second)
                 fetchWeatherData(savedLocation.first, savedLocation.second, context)
                 _isUserSelectedLocation.value = true
@@ -116,7 +117,7 @@ class WeatherViewModel(
         Log.i("Find Language", "fetchCurrentWeather: $units")
         viewModelScope.launch {
             try {
-                weatherRepository.getCurrentWeather(lat, lon, lang, units, isOnline = true)
+                weatherRepository.getCurrentWeather(lat, lon, lang, units)
                     .collectLatest { response ->
                         _currentWeatherState.value = response?.let {
                             CurrentWeatherState.Success(it)
@@ -141,7 +142,7 @@ class WeatherViewModel(
                 else -> "metric"
             }
             try {
-                weatherRepository.getForecastWeather(lat, lon, lang, units, isOnline = true)
+                weatherRepository.getForecastWeather(lat, lon, lang, units)
                     .collectLatest { response ->
                         val dailyForecast = response?.list
                             ?.groupBy { it.dt_txt.substring(0, 10) }
@@ -173,8 +174,8 @@ class WeatherViewModel(
 
     fun fetchAndSaveFavoritePlace(context: Context, lat: Double, lon: Double, placeName: String) {
         viewModelScope.launch {
-            val currentWeather = weatherRepository.getCurrentWeather(lat, lon, "en", "metric", isOnline = true).firstOrNull()
-            val forecastWeather = weatherRepository.getForecastWeather(lat, lon, "en", "metric", isOnline = true).firstOrNull()
+            val currentWeather = weatherRepository.getCurrentWeather(lat, lon, "en", "metric").firstOrNull()
+            val forecastWeather = weatherRepository.getForecastWeather(lat, lon, "en", "metric").firstOrNull()
 
             if (currentWeather != null && forecastWeather != null) {
                 val favoritePlace = FavoritePlace(
@@ -188,6 +189,27 @@ class WeatherViewModel(
                     city = forecastWeather.city
                 )
                 weatherRepository.saveFavoritePlace(favoritePlace)
+            }
+        }
+    }
+
+    fun fetchAndSaveHome(context: Context, lat: Double, lon: Double, placeName: String) {
+        viewModelScope.launch {
+            val currentWeather = weatherRepository.getCurrentWeather(lat, lon, "en", "metric").firstOrNull()
+            val forecastWeather = weatherRepository.getForecastWeather(lat, lon, "en", "metric").firstOrNull()
+
+            if (currentWeather != null && forecastWeather != null) {
+                val favoritePlace = HomeScreenData(
+                    cityName = placeName,
+                    coord = currentWeather.coord,
+                    main = currentWeather.main,
+                    clouds = currentWeather.clouds,
+                    weather = currentWeather.weather,
+                    wind = currentWeather.wind,
+                    forecast = forecastWeather.list,
+                    city = forecastWeather.city
+                )
+                weatherRepository.saveHomeScreenData(favoritePlace)
             }
         }
     }
@@ -223,4 +245,3 @@ class WeatherViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-

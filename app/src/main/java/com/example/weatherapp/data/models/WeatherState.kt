@@ -1,6 +1,6 @@
 package com.example.weatherapp.data.models
 
-import retrofit2.Response
+import kotlinx.coroutines.flow.Flow
 
 sealed class CurrentWeatherState {
     data object Loading : CurrentWeatherState()

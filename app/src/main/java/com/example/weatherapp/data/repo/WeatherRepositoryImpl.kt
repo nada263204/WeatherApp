@@ -1,55 +1,105 @@
 package com.example.weatherapp.data.repo
 
+import android.content.Context
+import android.util.Log
 import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.data.local.LocalDataSource
+import com.example.weatherapp.data.models.HomeScreenData
 import com.example.weatherapp.data.models.Response5days3hours
 import com.example.weatherapp.data.models.ResponseCurrentWeather
 import com.example.weatherapp.data.remote.RemoteDataSource
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import com.example.weatherapp.utils.NetworkUtils
+import kotlinx.coroutines.flow.*
 
 class WeatherRepositoryImpl(
     private val remoteDataSource: RemoteDataSource,
-    private val localDataSource: LocalDataSource
+    private val localDataSource: LocalDataSource,
+    private val context: Context
 ) : WeatherRepository {
+
+    private val isOnline: Boolean
+        get() = NetworkUtils.isNetworkAvailable(context)
 
     override suspend fun getCurrentWeather(
         lat: Double,
         lon: Double,
         lang: String,
         units: String,
-        isOnline: Boolean
     ): Flow<ResponseCurrentWeather?> {
         return flow {
             if (isOnline) {
                 val response = remoteDataSource.getCurrentWeather(lat, lon, lang, units).firstOrNull()
                 emit(response)
             } else {
-                val favoritePlaces = localDataSource.getAllFavoritePlaces()
-                emit(favoritePlaces.map { it.find { place -> place.coord.lat == lat && place.coord.lon == lon }?.let { toCurrentWeather(it) } }.firstOrNull())
+                // Retrieve the last added home screen data entry
+                val homeScreenDataList = localDataSource.getHomeScreenData().firstOrNull()
+                val lastHomeData = homeScreenDataList?.lastOrNull()
+
+                if (lastHomeData != null) {
+                    Log.d("WeatherRepository", "🏠 Using last saved HomeScreenData: ${lastHomeData.cityName}")
+                    emit(fromHomeDataToCurrentWeather(lastHomeData))
+                } else {
+                    Log.e("WeatherRepository", "⚠️ No home screen data found in Room.")
+                }
+
+                // Check favorite places
+                val favoritePlaces = localDataSource.getAllFavoritePlaces().firstOrNull()
+                val matchingFavorite = favoritePlaces?.find { areCoordinatesEqual(it.coord.lat, lat) && areCoordinatesEqual(it.coord.lon, lon) }
+
+                if (matchingFavorite != null) {
+                    Log.d("WeatherRepository", "⭐ Found matching favorite place: ${matchingFavorite.cityName}")
+                    emit(toCurrentWeather(matchingFavorite))
+                } else {
+                    Log.e("WeatherRepository", "❌ No matching favorite place found.")
+                }
             }
-        }.catch { emit(null) }
+        }.catch { e ->
+            Log.e("WeatherRepository", "⚠️ Error fetching current weather: ${e.localizedMessage}")
+            emit(null)
+        }
     }
 
     override suspend fun getForecastWeather(
         lat: Double,
         lon: Double,
         lang: String,
-        units: String,
-        isOnline: Boolean
+        units: String
     ): Flow<Response5days3hours?> {
         return flow {
             if (isOnline) {
                 val response = remoteDataSource.getForecastWeather(lat, lon, lang, units).firstOrNull()
                 emit(response)
             } else {
-                val favoritePlaces = localDataSource.getAllFavoritePlaces()
-                emit(favoritePlaces.map { it.find { place -> place.coord.lat == lat && place.coord.lon == lon }?.let { toForecastWeather(it) } }.firstOrNull())
+                // Retrieve the last added home screen data entry
+                val homeScreenDataList = localDataSource.getHomeScreenData().firstOrNull()
+                val lastHomeData = homeScreenDataList?.lastOrNull()
+
+                if (lastHomeData != null) {
+                    Log.d("WeatherRepository", "🏠 Using last saved HomeScreenData for forecast: ${lastHomeData.cityName}")
+                    emit(fromHomeDataToForecastWeather(lastHomeData))
+                } else {
+                    Log.e("WeatherRepository", "⚠️ No home screen data found in Room.")
+                }
+
+                // Check favorite places
+                val favoritePlace = localDataSource.getAllFavoritePlaces().firstOrNull()
+                    ?.find { areCoordinatesEqual(it.coord.lat, lat) && areCoordinatesEqual(it.coord.lon, lon) }
+
+                if (favoritePlace != null) {
+                    Log.d("WeatherRepository", "⭐ Using favorite place forecast: ${favoritePlace.cityName}")
+                    emit(toForecastWeather(favoritePlace))
+                } else {
+                    Log.e("WeatherRepository", "❌ No matching favorite place found for forecast.")
+                }
             }
-        }.catch { emit(null) }
+        }.catch { e ->
+            Log.e("WeatherRepository", "⚠️ Error fetching forecast weather: ${e.localizedMessage}")
+            emit(null)
+        }
+    }
+
+    private fun areCoordinatesEqual(a: Double, b: Double, tolerance: Double = 0.0001): Boolean {
+        return kotlin.math.abs(a - b) < tolerance
     }
 
     override fun getFavoritePlaces(): Flow<List<FavoritePlace>> {
@@ -62,6 +112,18 @@ class WeatherRepositoryImpl(
 
     override suspend fun deleteFavoritePlace(place: FavoritePlace) {
         localDataSource.deleteFavoritePlace(place)
+    }
+
+    override fun getHomeScreenData(): Flow<List<HomeScreenData>> {
+        return localDataSource.getHomeScreenData()
+    }
+
+    override suspend fun saveHomeScreenData(homeScreenData: HomeScreenData) {
+        localDataSource.insertHomeScreenData(homeScreenData)
+    }
+
+    override suspend fun deleteHomeScreenData() {
+        localDataSource.clearHomeScreenData()
     }
 
     private fun toCurrentWeather(favoritePlace: FavoritePlace): ResponseCurrentWeather {
@@ -82,13 +144,31 @@ class WeatherRepositoryImpl(
         )
     }
 
+    private fun fromHomeDataToCurrentWeather(homeData: HomeScreenData): ResponseCurrentWeather {
+        return ResponseCurrentWeather(
+            coord = homeData.coord,
+            main = homeData.main,
+            clouds = homeData.clouds,
+            weather = homeData.weather,
+            wind = homeData.wind,
+            name = homeData.cityName
+        )
+    }
+
+    private fun fromHomeDataToForecastWeather(homeData: HomeScreenData): Response5days3hours {
+        return Response5days3hours(
+            list = homeData.forecast,
+            city = homeData.city
+        )
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: WeatherRepositoryImpl? = null
 
-        fun getInstance(remoteDataSource: RemoteDataSource, localDataSource: LocalDataSource): WeatherRepositoryImpl {
+        fun getInstance(remoteDataSource: RemoteDataSource, localDataSource: LocalDataSource, context: Context): WeatherRepositoryImpl {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: WeatherRepositoryImpl(remoteDataSource, localDataSource).also { INSTANCE = it }
+                INSTANCE ?: WeatherRepositoryImpl(remoteDataSource, localDataSource, context).also { INSTANCE = it }
             }
         }
     }

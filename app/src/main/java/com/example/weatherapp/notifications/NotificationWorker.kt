@@ -40,8 +40,9 @@ class NotificationWorker(
         val notificationDatabase = NotificationDatabase.getDatabase(context)
         val favoritePlaceDao = database.favoritePlaceDao()
         val notificationDao = notificationDatabase.notificationDao()
-        val localDataSource = LocalDataSourceImpl(favoritePlaceDao,notificationDao)
-        val weatherRepository = WeatherRepositoryImpl(remoteDataSource, localDataSource)
+        val homeDao = database.homeScreenDao()
+        val localDataSource = LocalDataSourceImpl(favoritePlaceDao,notificationDao,homeDao)
+        val weatherRepository = WeatherRepositoryImpl(remoteDataSource, localDataSource,context)
 
         val locationUtils = LocationUtils(context)
 
@@ -52,7 +53,7 @@ class NotificationWorker(
             val (lat, lon) = location
             runBlocking {
                 val weatherData = weatherRepository.getCurrentWeather(
-                    lat, lon, "en", "metric", isOnline = true
+                    lat, lon, "en", "metric"
                 ).firstOrNull()
 
                 Log.d("NotificationWorker", "Weather Data: $weatherData")
