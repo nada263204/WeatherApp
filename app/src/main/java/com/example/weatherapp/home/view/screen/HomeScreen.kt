@@ -99,7 +99,10 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
 
                     Spacer(modifier = Modifier.height(28.dp))
 
-                    WeatherIcon(conditionId = data.weather[0].icon, description = data.weather[0].description)
+                    WeatherIcon(
+                        conditionId = data.weather[0].icon,
+                        description = data.weather[0].description
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -125,15 +128,18 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
 
                     when (forecastWeatherState) {
                         is ForecastWeatherState.Success -> {
-                            val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
+                            val forecastData =
+                                (forecastWeatherState as ForecastWeatherState.Success).data
                             WeatherForecastSection(forecastData.list)
                             Spacer(modifier = Modifier.height(24.dp))
                         }
+
                         is ForecastWeatherState.Loading -> Text(
                             stringResource(R.string.loading_forecast),
                             fontSize = 18.sp,
                             color = Color.White
                         )
+
                         is ForecastWeatherState.Failure -> Text(
                             stringResource(R.string.failed_to_load_forecast),
                             fontSize = 18.sp,
@@ -147,20 +153,25 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                             .padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.Start
                     ) {
-                        Text(stringResource(R.string.this_week), fontSize = 20.sp, color = Color.White)
+                        Text(
+                            stringResource(R.string.this_week),
+                            fontSize = 20.sp,
+                            color = Color.White
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     when (forecastWeatherState) {
                         is ForecastWeatherState.Success -> {
-                            val forecastData = (forecastWeatherState as ForecastWeatherState.Success).data
+                            val forecastData =
+                                (forecastWeatherState as ForecastWeatherState.Success).data
                             WeatherDailyForecastSection(forecastData.list)
                         }
+
                         else -> {}
                     }
                 }
-
                 is CurrentWeatherState.Failure -> Text(
                     stringResource(R.string.failed_to_load_weather),
                     fontSize = 18.sp,
@@ -225,7 +236,8 @@ fun WeatherDailyForecastSection(forecastList: List<ListItem>) {
 
 @Composable
 fun CityAndDateSection(city: String) {
-    val currentDate = remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date()) }
+    val currentDate =
+        remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date()) }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = city, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -292,12 +304,18 @@ fun WeatherHourCard(data: WeatherHourData, isSelected: Boolean, onClick: () -> U
 
         Column {
             Text(text = data.time, fontSize = 14.sp, color = Color.LightGray)
-            Text(text = data.temperature, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(
+                text = data.temperature,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
     }
 }
 
 data class WeatherHourData(val time: String, val temperature: String, val iconRes: Int)
+
 @Composable
 fun WeatherIcon(conditionId: String, description: String) {
     val iconMap = mapOf(
@@ -321,7 +339,12 @@ fun WeatherIcon(conditionId: String, description: String) {
             modifier = Modifier.size(120.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = description, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
+        Text(
+            text = description,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White
+        )
     }
 }
 

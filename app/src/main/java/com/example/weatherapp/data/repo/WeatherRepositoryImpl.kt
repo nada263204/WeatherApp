@@ -31,7 +31,6 @@ class WeatherRepositoryImpl(
                 val response = remoteDataSource.getCurrentWeather(lat, lon, lang, units).firstOrNull()
                 emit(response)
             } else {
-                // Retrieve the last added home screen data entry
                 val homeScreenDataList = localDataSource.getHomeScreenData().firstOrNull()
                 val lastHomeData = homeScreenDataList?.lastOrNull()
 
@@ -42,7 +41,6 @@ class WeatherRepositoryImpl(
                     Log.e("WeatherRepository", "⚠️ No home screen data found in Room.")
                 }
 
-                // Check favorite places
                 val favoritePlaces = localDataSource.getAllFavoritePlaces().firstOrNull()
                 val matchingFavorite = favoritePlaces?.find { areCoordinatesEqual(it.coord.lat, lat) && areCoordinatesEqual(it.coord.lon, lon) }
 
@@ -70,7 +68,6 @@ class WeatherRepositoryImpl(
                 val response = remoteDataSource.getForecastWeather(lat, lon, lang, units).firstOrNull()
                 emit(response)
             } else {
-                // Retrieve the last added home screen data entry
                 val homeScreenDataList = localDataSource.getHomeScreenData().firstOrNull()
                 val lastHomeData = homeScreenDataList?.lastOrNull()
 
@@ -81,7 +78,6 @@ class WeatherRepositoryImpl(
                     Log.e("WeatherRepository", "⚠️ No home screen data found in Room.")
                 }
 
-                // Check favorite places
                 val favoritePlace = localDataSource.getAllFavoritePlaces().firstOrNull()
                     ?.find { areCoordinatesEqual(it.coord.lat, lat) && areCoordinatesEqual(it.coord.lon, lon) }
 
@@ -165,7 +161,6 @@ class WeatherRepositoryImpl(
     companion object {
         @Volatile
         private var INSTANCE: WeatherRepositoryImpl? = null
-
         fun getInstance(remoteDataSource: RemoteDataSource, localDataSource: LocalDataSource, context: Context): WeatherRepositoryImpl {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: WeatherRepositoryImpl(remoteDataSource, localDataSource, context).also { INSTANCE = it }
