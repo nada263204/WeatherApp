@@ -136,21 +136,25 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
 
-    // MockK
+    // MockK (Alternative to Mockito)
     testImplementation("io.mockk:mockk-android:1.13.7")
     testImplementation("io.mockk:mockk-agent:1.13.7")
     testImplementation(kotlin("test"))
 
-    testImplementation ("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testImplementation ("org.junit.jupiter:junit-jupiter-engine:5.8.1")
-    testImplementation ("org.mockito:mockito-core:4.2.0")
-    testImplementation ("org.mockito.kotlin:mockito-kotlin:4.0.0")
-    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
+    // JUnit 5
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 
-    androidTestImplementation ("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation ("androidx.test:core:1.5.0")
-    testImplementation ("junit:junit:4.13.2")
+    // ✅ Updated Mockito Dependencies
+    testImplementation("org.mockito:mockito-core:5.6.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0") // Allows mocking final classes
 
+    // ✅ Fix ByteBuddy NoClassDefFoundError
+    testImplementation("net.bytebuddy:byte-buddy:1.14.8")
+    testImplementation("net.bytebuddy:byte-buddy-agent:1.14.8")
 
-
+    // AndroidX Test
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:core:1.5.0")
 }
+

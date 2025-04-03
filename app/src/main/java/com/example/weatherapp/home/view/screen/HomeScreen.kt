@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 @Composable
 fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
     val currentWeatherState by viewModel.currentWeatherState.collectAsState()
@@ -93,18 +94,18 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
 
                 is CurrentWeatherState.Success -> {
                     val data = (currentWeatherState as CurrentWeatherState.Success).data
-                    Spacer(modifier = Modifier.height(40.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     CityAndDateSection(data.name)
 
-                    Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     WeatherIcon(
                         conditionId = data.weather[0].icon,
                         description = data.weather[0].description
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     WeatherDetails(
                         temp = data.main.temp.toString(),
@@ -114,7 +115,7 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                         pressure = data.main.pressure
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     Row(
                         modifier = Modifier
@@ -131,7 +132,7 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                             val forecastData =
                                 (forecastWeatherState as ForecastWeatherState.Success).data
                             WeatherForecastSection(forecastData.list)
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
                         }
 
                         is ForecastWeatherState.Loading -> Text(
@@ -160,7 +161,7 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     when (forecastWeatherState) {
                         is ForecastWeatherState.Success -> {
@@ -247,36 +248,59 @@ fun CityAndDateSection(city: String) {
 
 @Composable
 fun WeatherDetails(temp: Any, wind: Any, humidity: Int, clouds: Int, pressure: Int) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A))
     ) {
-        WeatherStat(stringResource(R.string.temperature), "${temp}°C")
-        WeatherStat(stringResource(R.string.wind), "${wind} km/h")
-        WeatherStat(stringResource(R.string.humidity), "$humidity%")
-        WeatherStat(stringResource(R.string.clouds), "$clouds%")
-        WeatherStat(stringResource(R.string.pressure), "$pressure hPa")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            WeatherStat(stringResource(R.string.temperature), "${temp}°C")
+            WeatherStat(stringResource(R.string.wind), "${wind} km/h")
+            WeatherStat(stringResource(R.string.humidity), "$humidity%")
+            WeatherStat(stringResource(R.string.clouds), "$clouds%")
+            WeatherStat(stringResource(R.string.pressure), "$pressure hPa")
+        }
     }
 }
+
 
 @Composable
 fun WeatherStat(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, fontSize = 14.sp, color = Color.LightGray)
-        Text(text = value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(text = label, fontSize = 12.sp, color = Color.LightGray)
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
     }
 }
 
+
 fun getWeatherIcon(conditionId: String): Int {
     return when (conditionId) {
-        "01d", "01n" -> R.drawable._01n
-        "02n" -> R.drawable._02n
+        "01d" -> R.drawable._01d
+        "01n" -> R.drawable._01n
+        "02d" -> R.drawable._02d
+        "02n" -> R.drawable._02d
         "03d" -> R.drawable._03d
         "03n" -> R.drawable._03n
         "04d" -> R.drawable._04d
         "04n" -> R.drawable._04n
+        "09d" -> R.drawable._09d
+        "09n" -> R.drawable._09n
+        "10d" -> R.drawable._10d
+        "10n" -> R.drawable._10n
+        "11d" -> R.drawable._11d
+        "11n" -> R.drawable._11n
         "13d" -> R.drawable._13d
         "13n" -> R.drawable._13n
+        "50d" -> R.drawable._50d
+        "50n" -> R.drawable._50n
         else -> R.drawable._01n
     }
 }
@@ -319,16 +343,28 @@ data class WeatherHourData(val time: String, val temperature: String, val iconRe
 @Composable
 fun WeatherIcon(conditionId: String, description: String) {
     val iconMap = mapOf(
-        "01d" to R.drawable._01n,
+        "01d" to R.drawable._01d,
         "01n" to R.drawable._01n,
+        "02d" to R.drawable._02d,
         "02n" to R.drawable._02n,
         "03d" to R.drawable._03d,
         "03n" to R.drawable._03n,
         "04d" to R.drawable._04d,
         "04n" to R.drawable._04n,
+        "09d" to R.drawable._09d,
+        "09n" to R.drawable._09n,
+        "10d" to R.drawable._10d,
+        "10n" to R.drawable._10n,
+        "11d" to R.drawable._11d,
+        "11n" to R.drawable._11n,
         "13d" to R.drawable._13d,
         "13n" to R.drawable._13n,
+        "50d" to R.drawable._50d,
+        "50n" to R.drawable._50n
     )
+
+    val defaultIcon = iconMap["unknown"] ?: R.drawable._01n
+
 
     val iconResId = iconMap[conditionId] ?: R.drawable._01n
 
