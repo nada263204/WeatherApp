@@ -156,5 +156,7 @@ dependencies {
     // AndroidX Test
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:core:1.5.0")
+
+    implementation ("com.airbnb.android:lottie:6.1.0")
 }
 

@@ -94,18 +94,18 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
 
                 is CurrentWeatherState.Success -> {
                     val data = (currentWeatherState as CurrentWeatherState.Success).data
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     CityAndDateSection(data.name)
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     WeatherIcon(
                         conditionId = data.weather[0].icon,
                         description = data.weather[0].description
                     )
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     WeatherDetails(
                         temp = data.main.temp.toString(),
@@ -115,7 +115,7 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                         pressure = data.main.pressure
                     )
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier
@@ -125,7 +125,7 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                     ) {
                         Text(stringResource(R.string.today), fontSize = 20.sp, color = Color.White)
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     when (forecastWeatherState) {
                         is ForecastWeatherState.Success -> {
@@ -161,7 +161,7 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     when (forecastWeatherState) {
                         is ForecastWeatherState.Success -> {
@@ -307,36 +307,47 @@ fun getWeatherIcon(conditionId: String): Int {
 
 @Composable
 fun WeatherHourCard(data: WeatherHourData, isSelected: Boolean, onClick: () -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .padding(6.dp)
-            .width(160.dp)
-            .height(80.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (isSelected) Color(0xFF6A0DAD) else Color(0xFF2A2A2A))
+            .width(60.dp)
+            .height(120.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                if (isSelected) Color(0xFF2A2A2A).copy(alpha = 0.8f)
+                else Color(0xFF2A2A2A).copy(alpha = 0.6f)
+            )
             .clickable { onClick() }
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
+        Text(
+            text = data.time,
+            fontSize = 12.sp,
+            color = Color.LightGray
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Image(
             painter = painterResource(id = data.iconRes),
             contentDescription = "Weather Icon",
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(36.dp)
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        Column {
-            Text(text = data.time, fontSize = 14.sp, color = Color.LightGray)
-            Text(
-                text = data.temperature,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
+        Text(
+            text = data.temperature,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.LightGray
+        )
     }
 }
+
+
 
 data class WeatherHourData(val time: String, val temperature: String, val iconRes: Int)
 
@@ -383,5 +394,17 @@ fun WeatherIcon(conditionId: String, description: String) {
         )
     }
 }
+
+@Composable
+fun SectionTitle(text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Text(text, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+}
+
 
 

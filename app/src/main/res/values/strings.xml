@@ -18,4 +18,24 @@
     <string name="wind_speed_unit">Wind Speed Unit:</string>
     <string name="this_week">This Week</string>
     <string name="language">Language:</string>
+
+    <string name="notifications">Notifications</string>
+    <string name="no_notifications">You have no new notifications.</string>
+    <string name="add_notification">Add Notification</string>
+    <string name="select_date_time">Select Date &amp; Time</string>
+    <string name="pick_date">Pick Date</string>
+    <string name="pick_time">Pick Time</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="confirm">Confirm</string>
+    <string name="delete">Delete</string>
+    <string name="saved_notification">Saved: %1$s, %2$s</string>
+    <string name="select_date_time_warning">Please select a date and time!</string>
+
+    <string name="favorite_places">Favorite Places</string>
+    <string name="open_map">Open Map</string>
+    <string name="weather_icon">Weather Icon</string>
+
+    <!-- Weather Details -->
+    <string name="city_name">City</string>
 </resources>
