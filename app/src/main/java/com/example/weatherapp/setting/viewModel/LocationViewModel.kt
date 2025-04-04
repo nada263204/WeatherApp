@@ -1,13 +1,10 @@
-package com.example.weatherapp.setting
-
+package com.example.weatherapp.setting.viewModel
 
 import android.content.Context
 import android.location.Geocoder
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.weatherapp.utiles.PreferenceManager
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

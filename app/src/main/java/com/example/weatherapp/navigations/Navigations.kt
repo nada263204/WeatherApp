@@ -1,5 +1,7 @@
 package com.example.weatherapp.navigations
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,19 +34,20 @@ import com.example.weatherapp.data.repo.WeatherRepository
 import com.example.weatherapp.home.view.HomeScreen
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 import com.example.weatherapp.home.viewModel.WeatherViewModelFactory
-import com.example.weatherapp.notifications.NotificationScreen
-import com.example.weatherapp.favorite.FavoriteScreen
-import com.example.weatherapp.favorite.FavoriteViewModel
-import com.example.weatherapp.favorite.FavoriteViewModelFactory
-import com.example.weatherapp.setting.MapScreen
-import com.example.weatherapp.setting.SettingsScreen
-import com.example.weatherapp.setting.SettingsViewModel
-import com.example.weatherapp.setting.SettingsViewModelFactory
+import com.example.weatherapp.notifications.view.NotificationScreen
+import com.example.weatherapp.favorite.view.FavoriteScreen
+import com.example.weatherapp.favorite.viewModel.FavoriteViewModel
+import com.example.weatherapp.favorite.viewModel.FavoriteViewModelFactory
+import com.example.weatherapp.setting.view.MapScreen
+import com.example.weatherapp.setting.view.SettingsScreen
+import com.example.weatherapp.setting.viewModel.SettingsViewModel
+import com.example.weatherapp.setting.viewModel.SettingsViewModelFactory
 import com.example.weatherapp.ui.theme.Purple80
 import com.example.weatherapp.ui.theme.purpleDark
 import com.example.weatherapp.utils.NetworkUtils
 import kotlinx.coroutines.delay
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen(
     latitude: Double,
@@ -135,6 +138,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavHostContainer(
     navController: NavHostController,

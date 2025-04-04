@@ -14,21 +14,14 @@ import com.example.weatherapp.data.models.ForecastWeatherState
 import com.example.weatherapp.data.models.HomeScreenData
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.data.repo.WeatherRepository
-import com.example.weatherapp.setting.SettingsViewModel
+import com.example.weatherapp.setting.viewModel.SettingsViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
-import java.util.Locale
 
-
-data class LocationData(
-    val latitude: Double,
-    val longitude: Double
-)
 
 class WeatherViewModel(
     private val weatherRepository: WeatherRepository,
@@ -244,3 +237,10 @@ class WeatherViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+
+data class LocationData(
+    val latitude: Double,
+    val longitude: Double
+)
+

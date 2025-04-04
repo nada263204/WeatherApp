@@ -1,4 +1,4 @@
-package com.example.weatherapp.favorite
+package com.example.weatherapp.favorite.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -7,7 +7,6 @@ import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.data.repo.WeatherRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 

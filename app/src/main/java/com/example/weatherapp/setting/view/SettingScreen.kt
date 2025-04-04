@@ -1,4 +1,4 @@
-package com.example.weatherapp.setting
+package com.example.weatherapp.setting.view
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -18,11 +18,17 @@ import com.example.weatherapp.R
 import com.example.weatherapp.utiles.LocationUtils
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.home.viewModel.WeatherViewModel
+import com.example.weatherapp.setting.viewModel.SettingsViewModel
+import com.example.weatherapp.setting.viewModel.SettingsViewModelFactory
 
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(LocalContext.current, LocationRepository(locationUtils = LocationUtils(LocalContext.current)))),
+    viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(
+        LocalContext.current,
+        LocationRepository(locationUtils = LocationUtils(LocalContext.current))
+    )
+    ),
     weatherViewModel: WeatherViewModel
 ) {
     val selectedLocation by viewModel.selectedLocation.collectAsState()

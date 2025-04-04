@@ -1,4 +1,4 @@
-package com.example.weatherapp.notifications
+package com.example.weatherapp.notifications.view
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import java.util.*
 import com.example.weatherapp.R
 import com.example.weatherapp.data.local.NotificationEntity
+import com.example.weatherapp.notifications.viewModel.NotificationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)

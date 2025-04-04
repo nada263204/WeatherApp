@@ -1,22 +1,25 @@
-package com.example.weatherapp.notifications
+package com.example.weatherapp.notifications.viewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.*
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.weatherapp.data.local.NotificationDatabase
 import com.example.weatherapp.data.local.NotificationEntity
+import com.example.weatherapp.notifications.view.NotificationWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class NotificationViewModel(application: Application) : AndroidViewModel(application) {
-    private val db = NotificationDatabase.getDatabase(application).notificationDao()
+    private val db = NotificationDatabase.Companion.getDatabase(application).notificationDao()
 
     private val _notifications = MutableStateFlow<List<NotificationEntity>>(emptyList())
     val notifications: StateFlow<List<NotificationEntity>> = _notifications
@@ -58,7 +61,7 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
             WorkManager.getInstance(getApplication()).enqueue(workRequest)
         }
     }
-    
+
     fun deleteNotification(time: String) {
         viewModelScope.launch (Dispatchers.IO){
             db.deleteNotificationByTime(time)
@@ -66,4 +69,3 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     }
 
 }
-

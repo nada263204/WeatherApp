@@ -9,10 +9,10 @@ import com.example.weatherapp.data.models.Main
 import com.example.weatherapp.data.models.WeatherItem
 import com.example.weatherapp.data.models.Wind
 import com.example.weatherapp.data.repo.WeatherRepository
+import com.example.weatherapp.favorite.viewModel.FavoriteViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first

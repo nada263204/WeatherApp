@@ -8,6 +8,7 @@ import com.example.weatherapp.data.local.NotificationDao
 import com.example.weatherapp.data.local.NotificationDatabase
 import com.example.weatherapp.data.repo.FakeWeatherRepository
 import com.example.weatherapp.data.repo.WeatherRepository
+import com.example.weatherapp.notifications.viewModel.NotificationViewModel
 import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
