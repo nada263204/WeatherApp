@@ -13,11 +13,11 @@
     <string name="pressure">الضغط</string>
     <string name="weather_icon_desc">أيقونة الطقس</string>
     <string name="settings">الإعدادات</string>
-    <string name="select_location">اختر الموقع:</string>
-    <string name="temperature_unit">وحدة درجة الحرارة:</string>
-    <string name="wind_speed_unit">وحدة سرعة الرياح:</string>
+    <string name="select_location">اختر الموقع</string>
+    <string name="temperature_unit">وحدة درجة الحرارة</string>
+    <string name="wind_speed_unit">وحدة سرعة الرياح</string>
     <string name="this_week">هذا الأسبوع</string>
-    <string name="language">اللغة:</string>
+    <string name="language">اللغة</string>
 
     <!-- Notification strings -->
     <string name="notifications">الإشعارات</string>

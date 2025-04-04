@@ -1,7 +1,5 @@
 package com.example.weatherapp.data.local
 
-import com.example.weatherapp.notifications.NotificationDao
-import com.example.weatherapp.notifications.NotificationEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 

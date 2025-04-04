@@ -37,6 +37,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     androidResources {
         generateLocaleConfig = true
@@ -52,6 +53,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -158,5 +161,6 @@ dependencies {
     androidTestImplementation("androidx.test:core:1.5.0")
 
     implementation ("com.airbnb.android:lottie:6.1.0")
+    implementation ("com.airbnb.android:lottie-compose:6.0.0")
 }
 

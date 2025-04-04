@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.example.weatherapp.data.local.NotificationDao
+import com.example.weatherapp.data.local.NotificationDatabase
 import com.example.weatherapp.data.repo.FakeWeatherRepository
 import com.example.weatherapp.data.repo.WeatherRepository
 import junit.framework.Assert.assertTrue
@@ -14,7 +16,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
 
 @ExperimentalCoroutinesApi

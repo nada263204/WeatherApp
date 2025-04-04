@@ -10,9 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
 import androidx.lifecycle.asFlow
-import com.example.weatherapp.PreferenceManager
+import com.example.weatherapp.utiles.PreferenceManager
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.home.viewModel.LocationData
+import com.example.weatherapp.utiles.LanguageChangeHelper
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
@@ -29,7 +30,7 @@ class SettingsViewModel(private val context: Context, private val locationReposi
     private val _selectedTemperatureUnit = MutableStateFlow(preferenceManager.getTemperatureUnit())
     val selectedTemperatureUnit: StateFlow<String> = _selectedTemperatureUnit
 
-    private val _selectedWindSpeedUnit = MutableStateFlow(getSavedWindSpeedUnit(context))
+    private val _selectedWindSpeedUnit = MutableStateFlow(preferenceManager.getWindSpeedUnit())
     val selectedWindSpeedUnit: StateFlow<String> = _selectedWindSpeedUnit
 
     private val _selectedLanguage = MutableStateFlow(LanguageChangeHelper.getSavedLanguage(context))
@@ -64,13 +65,23 @@ class SettingsViewModel(private val context: Context, private val locationReposi
         viewModelScope.launch {
             preferenceManager.saveTemperatureUnit(unit)
             _selectedTemperatureUnit.value = unit
+
+            val windUnit = if (unit == "Kelvin") "mph" else "m/s"
+            preferenceManager.saveWindSpeedUnit(windUnit)
+            _selectedWindSpeedUnit.value = windUnit
         }
     }
+
 
     fun updateWindSpeedUnit(unit: String) {
         viewModelScope.launch {
             preferenceManager.saveWindSpeedUnit(unit)
             _selectedWindSpeedUnit.value = unit
+
+            if (unit == "mph") {
+                preferenceManager.saveTemperatureUnit("Kelvin")
+                _selectedTemperatureUnit.value = "Kelvin"
+            }
         }
     }
 
@@ -120,35 +131,6 @@ class SettingsViewModel(private val context: Context, private val locationReposi
         private const val WIND_SPEED_UNIT_KEY = "wind_speed_unit"
         private const val LOCATION_METHOD_KEY = "location_method"
 
-        private fun getSavedTemperatureUnit(context: Context): String {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            return prefs.getString(TEMP_UNIT_KEY, "Celsius") ?: "Celsius"
-        }
-
-        fun saveTemperatureUnit(context: Context, unit: String) {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit { putString(TEMP_UNIT_KEY, unit) }
-        }
-
-        private fun getSavedWindSpeedUnit(context: Context): String {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            return prefs.getString(WIND_SPEED_UNIT_KEY, "m/s") ?: "m/s"
-        }
-
-        private fun saveWindSpeedUnit(context: Context, unit: String) {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit { putString(WIND_SPEED_UNIT_KEY, unit) }
-        }
-
-        private fun getSavedLocationMethod(context: Context): String {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            return prefs.getString(LOCATION_METHOD_KEY, "GPS") ?: "GPS"
-        }
-
-        private fun saveLocationMethod(context: Context, method: String) {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit { putString(LOCATION_METHOD_KEY, method) }
-        }
     }
 }
 

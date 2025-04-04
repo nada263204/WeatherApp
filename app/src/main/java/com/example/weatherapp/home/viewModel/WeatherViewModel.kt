@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
-import com.example.weatherapp.PreferenceManager
+import com.example.weatherapp.utiles.PreferenceManager
 import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.data.models.CurrentWeatherState
 import com.example.weatherapp.data.models.ForecastWeatherState
@@ -58,12 +58,14 @@ class WeatherViewModel(
 
     init {
         restorePreviousState(context)
+
     }
+
+
 
     private fun restorePreviousState(context: Context) {
         viewModelScope.launch {
-            //val locationMethod = settingsViewModel.selectedLocation.firstOrNull()
-            val savedLocation = preferenceManager.getLocation()
+        val savedLocation = preferenceManager.getLocation()
 
             if (savedLocation != null) {
                 _location.value = LocationData(savedLocation.first, savedLocation.second)
@@ -99,7 +101,7 @@ class WeatherViewModel(
 
     private fun fetchWeatherData(lat: Double, lon: Double,context: Context) {
         fetchCurrentWeather(lat, lon,context)
-        fetchForecastWeather(lat, lon)
+        fetchForecastWeather(lat, lon,context)
     }
 
     fun fetchCurrentWeather(lat: Double, lon: Double,context: Context) {
@@ -114,7 +116,6 @@ class WeatherViewModel(
             else -> "metric"
         }
 
-        Log.i("Find Language", "fetchCurrentWeather: $units")
         viewModelScope.launch {
             try {
                 weatherRepository.getCurrentWeather(lat, lon, lang, units)
@@ -130,34 +131,32 @@ class WeatherViewModel(
         }
     }
 
-    fun fetchForecastWeather(lat: Double, lon: Double) {
-        viewModelScope.launch {
-            val preferenceManager = PreferenceManager(context)
-            val lang = preferenceManager.getLanguage()
+    fun fetchForecastWeather(lat: Double, lon: Double ,context: Context) {
+        val preferenceManager = PreferenceManager(context)
+        val lang = preferenceManager.getLanguage()
 
-            val savedUnit = preferenceManager.getTemperatureUnit()
-            val units = when (settingsViewModel.selectedTemperatureUnit.value) {
-                "Kelvin" -> "standard"
-                "Fahrenheit" -> "imperial"
-                else -> "metric"
-            }
-            try {
-                weatherRepository.getForecastWeather(lat, lon, lang, units)
-                    .collectLatest { response ->
-                        val dailyForecast = response?.list
-                            ?.groupBy { it.dt_txt.substring(0, 10) }
-                            ?.map { (_, items) -> items.first() }
-
-                        _forecastWeatherState.value = dailyForecast?.let {
-                            ForecastWeatherState.Success(response.copy(list = it))
-                        } ?: ForecastWeatherState.Failure(Exception("No data received"))
-                    }
-            } catch (e: Exception) {
-                _forecastWeatherState.value = ForecastWeatherState.Failure(e)
-                Log.e("WeatherViewModel", "fetchForecastWeather failed", e)
-            }
+        val savedUnit = preferenceManager.getTemperatureUnit()
+        val units = when (savedUnit) {
+            "Kelvin" -> "standard"
+            "Fahrenheit" -> "imperial"
+            else -> "metric"
         }
+            viewModelScope.launch {
+                try {
+                    weatherRepository.getForecastWeather(lat,lon,lang,units)
+                        .collectLatest {response ->
+                            _forecastWeatherState.value = response?.let{
+                                ForecastWeatherState.Success(it)
+                            } ?: ForecastWeatherState.Failure(Exception("Weather data unavailable"))
+                        }
+                }catch (e: Exception) {
+                    _currentWeatherState.value = CurrentWeatherState.Failure(e)
+                    Log.e("WeatherViewModel", "fetchCurrentWeather failed", e)
+                }
+            }
+
     }
+
 
     fun setUserSelectedLocation(lat: Double, lon: Double, context: Context) {
         _isUserSelectedLocation.value = true

@@ -1,12 +1,9 @@
-package com.example.weatherapp.setting
+package com.example.weatherapp.utiles
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.os.Build
-import androidx.core.os.LocaleListCompat
 import java.util.Locale
-
 
 object LanguageChangeHelper {
     private const val PREFS_NAME = "settings"
@@ -29,4 +26,3 @@ object LanguageChangeHelper {
         context.resources.updateConfiguration(config, context.resources.displayMetrics)
     }
 }
-

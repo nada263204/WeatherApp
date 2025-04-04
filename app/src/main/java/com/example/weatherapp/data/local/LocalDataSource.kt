@@ -1,7 +1,6 @@
 package com.example.weatherapp.data.local
 
 import com.example.weatherapp.data.models.HomeScreenData
-import com.example.weatherapp.notifications.NotificationEntity
 import kotlinx.coroutines.flow.Flow
 
 interface LocalDataSource {

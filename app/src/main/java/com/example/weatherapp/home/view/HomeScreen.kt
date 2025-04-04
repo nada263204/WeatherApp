@@ -1,4 +1,4 @@
-package com.example.weatherapp.home.view.screen
+package com.example.weatherapp.home.view
 
 import android.content.Context
 import android.util.Log
@@ -24,17 +24,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.example.weatherapp.R
 import com.example.weatherapp.data.models.CurrentWeatherState
 import com.example.weatherapp.data.models.ForecastWeatherState
 import com.example.weatherapp.data.models.ListItem
-import com.example.weatherapp.data.models.Response5days3hours
-import com.example.weatherapp.data.models.ResponseCurrentWeather
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 import com.example.weatherapp.utils.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.airbnb.lottie.compose.rememberLottieComposition
+import kotlinx.coroutines.delay
+import java.text.NumberFormat
 
 
 @Composable
@@ -44,11 +48,17 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
     val location by viewModel.location.collectAsState()
 
     var isOffline by remember { mutableStateOf(!NetworkUtils.isNetworkAvailable(context)) }
+    var alertShown by remember { mutableStateOf(false)}
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    val temperatureUnit = remember {
+        mutableStateOf(getTemperatureUnitSymbol(context))
+    }
+
+
     LaunchedEffect(isOffline) {
-        if (isOffline) {
+        if (isOffline&& !alertShown) {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
                     message = "No internet connection,you need connection to get fresh data",
@@ -56,11 +66,16 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                 )
             }
         }
+        while (true) {
+            delay(1000)
+            temperatureUnit.value = getTemperatureUnitSymbol(context)
+        }
     }
 
     LaunchedEffect(location, currentWeatherState) {
         location?.let {
             viewModel.fetchCurrentWeather(it.latitude, it.longitude, context)
+            viewModel.fetchForecastWeather(it.latitude, it.longitude, context)
         }
 
         if (currentWeatherState is CurrentWeatherState.Success) {
@@ -70,6 +85,7 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
             }
         }
     }
+
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -86,11 +102,22 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (currentWeatherState) {
-                is CurrentWeatherState.Loading -> Text(
-                    stringResource(R.string.loading),
-                    fontSize = 18.sp,
-                    color = Color.White
-                )
+                is CurrentWeatherState.Loading -> {
+                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading))
+                    val progress by animateLottieCompositionAsState(composition)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LottieAnimation(
+                            composition = composition,
+                            progress = progress,
+                            modifier = Modifier.size(100.dp)
+                        )
+                    }
+                }
 
                 is CurrentWeatherState.Success -> {
                     val data = (currentWeatherState as CurrentWeatherState.Success).data
@@ -108,11 +135,12 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     WeatherDetails(
-                        temp = data.main.temp.toString(),
-                        wind = data.wind.speed.toString(),
-                        humidity = data.main.humidity,
-                        clouds = data.clouds.all,
-                        pressure = data.main.pressure
+                        temp = (data.main.temp as? Double)?.toInt() ?: 0,
+                        wind = (data.wind.speed as? Double)?.toInt() ?: 0,
+                        humidity = data.main.humidity as? Int ?: 0,
+                        clouds = data.clouds.all as? Int ?: 0,
+                        pressure = data.main.pressure as? Int ?: 0,
+                        context = LocalContext.current
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -131,21 +159,44 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                         is ForecastWeatherState.Success -> {
                             val forecastData =
                                 (forecastWeatherState as ForecastWeatherState.Success).data
-                            WeatherForecastSection(forecastData.list)
+                            WeatherForecastSection(forecastData.list,context)
                             Spacer(modifier = Modifier.height(18.dp))
                         }
 
-                        is ForecastWeatherState.Loading -> Text(
-                            stringResource(R.string.loading_forecast),
-                            fontSize = 18.sp,
-                            color = Color.White
-                        )
+                        is ForecastWeatherState.Loading ->  {
+                            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading))
+                            val progress by animateLottieCompositionAsState(composition)
 
-                        is ForecastWeatherState.Failure -> Text(
-                            stringResource(R.string.failed_to_load_forecast),
-                            fontSize = 18.sp,
-                            color = Color.White
-                        )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LottieAnimation(
+                                    composition = composition,
+                                    progress = progress,
+                                    modifier = Modifier.size(100.dp)
+                                )
+                            }
+                        }
+
+
+                        is ForecastWeatherState.Failure ->  {
+                            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.failed))
+                            val progress by animateLottieCompositionAsState(composition)
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LottieAnimation(
+                                    composition = composition,
+                                    progress = progress,
+                                    modifier = Modifier.size(100.dp)
+                                )
+                            }
+                        }
                     }
 
                     Row(
@@ -167,24 +218,35 @@ fun HomeScreen(viewModel: WeatherViewModel, context: Context) {
                         is ForecastWeatherState.Success -> {
                             val forecastData =
                                 (forecastWeatherState as ForecastWeatherState.Success).data
-                            WeatherDailyForecastSection(forecastData.list)
+                            WeatherDailyForecastSection(forecastData.list,context)
                         }
 
                         else -> {}
                     }
                 }
-                is CurrentWeatherState.Failure -> Text(
-                    stringResource(R.string.failed_to_load_weather),
-                    fontSize = 18.sp,
-                    color = Color.White
-                )
+                is CurrentWeatherState.Failure ->  {
+                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.failed))
+                    val progress by animateLottieCompositionAsState(composition)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LottieAnimation(
+                            composition = composition,
+                            progress = progress,
+                            modifier = Modifier.size(100.dp)
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun WeatherForecastSection(forecastList: List<ListItem>) {
+fun WeatherForecastSection(forecastList: List<ListItem>,context: Context) {
     var selectedIndex by remember { mutableStateOf(-1) }
 
     LazyRow(
@@ -196,7 +258,8 @@ fun WeatherForecastSection(forecastList: List<ListItem>) {
         itemsIndexed(forecastList) { index, item ->
             val formattedTime = item.dt_txt.substring(11, 16)
             val iconRes = getWeatherIcon(item.weather[0].icon)
-            val temperature = "${item.main.temp}°"
+            val temp = (item.main.temp as? Double)?.toInt() ?: 0
+            val temperature = "${formatNumber(temp, context)}${getTemperatureUnitSymbol(context)}"
 
             WeatherHourCard(
                 data = WeatherHourData(formattedTime, temperature, iconRes),
@@ -208,7 +271,7 @@ fun WeatherForecastSection(forecastList: List<ListItem>) {
 }
 
 @Composable
-fun WeatherDailyForecastSection(forecastList: List<ListItem>) {
+fun WeatherDailyForecastSection(forecastList: List<ListItem>,context: Context) {
     var selectedIndex by remember { mutableStateOf(-1) }
 
     val dailyForecast = forecastList
@@ -224,7 +287,8 @@ fun WeatherDailyForecastSection(forecastList: List<ListItem>) {
         itemsIndexed(dailyForecast) { index, item ->
             val formattedDate = item.dt_txt.substring(5, 10)
             val iconRes = getWeatherIcon(item.weather[0].icon)
-            val temperature = "${item.main.temp}°"
+            val temp = (item.main.temp as? Double)?.toInt() ?: 0
+            val temperature = "${formatNumber(temp, context)}${getTemperatureUnitSymbol(context)}"
 
             WeatherHourCard(
                 data = WeatherHourData(formattedDate, temperature, iconRes),
@@ -247,13 +311,20 @@ fun CityAndDateSection(city: String) {
 }
 
 @Composable
-fun WeatherDetails(temp: Any, wind: Any, humidity: Int, clouds: Int, pressure: Int) {
+fun WeatherDetails(temp: Int, wind: Int, humidity: Int, clouds: Int, pressure: Int, context: Context) {
+    val tempUnit by remember { mutableStateOf(getTemperatureUnitSymbol(context)) }
+    val windUnit by remember { mutableStateOf(getWindSpeedUnitSymbol(context)) }
+
+
+    val formattedTemp = formatNumber(temp, context)
+    val formattedWind = formatNumber(wind, context)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A).copy(alpha = 0.8f))
     ) {
         Row(
             modifier = Modifier
@@ -262,14 +333,15 @@ fun WeatherDetails(temp: Any, wind: Any, humidity: Int, clouds: Int, pressure: I
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            WeatherStat(stringResource(R.string.temperature), "${temp}°C")
-            WeatherStat(stringResource(R.string.wind), "${wind} km/h")
-            WeatherStat(stringResource(R.string.humidity), "$humidity%")
-            WeatherStat(stringResource(R.string.clouds), "$clouds%")
-            WeatherStat(stringResource(R.string.pressure), "$pressure hPa")
+            WeatherStat(stringResource(R.string.temperature), "$formattedTemp$tempUnit")
+            WeatherStat(stringResource(R.string.wind), "$formattedWind $windUnit")
+            WeatherStat(stringResource(R.string.humidity), "${formatNumber(humidity,context)}%")
+            WeatherStat(stringResource(R.string.clouds), "${formatNumber(clouds,context)}%")
+            WeatherStat(stringResource(R.string.pressure), "${formatNumber(pressure,context)} hPa")
         }
     }
 }
+
 
 
 @Composable
@@ -340,7 +412,7 @@ fun WeatherHourCard(data: WeatherHourData, isSelected: Boolean, onClick: () -> U
 
         Text(
             text = data.temperature,
-            fontSize = 16.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = Color.LightGray
         )
@@ -374,7 +446,6 @@ fun WeatherIcon(conditionId: String, description: String) {
         "50n" to R.drawable._50n
     )
 
-    val defaultIcon = iconMap["unknown"] ?: R.drawable._01n
 
 
     val iconResId = iconMap[conditionId] ?: R.drawable._01n
@@ -395,16 +466,44 @@ fun WeatherIcon(conditionId: String, description: String) {
     }
 }
 
-@Composable
-fun SectionTitle(text: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Text(text, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+fun formatNumber(value: Int, context: Context): String {
+    val sharedPreferences = context.getSharedPreferences("weather_pref", Context.MODE_PRIVATE)
+    val language = sharedPreferences.getString("language", Locale.getDefault().language)
+
+    val locale = if (language == "ar") {
+        Locale("ar", "EG")
+    } else {
+        Locale.getDefault()
     }
-    Spacer(modifier = Modifier.height(8.dp))
+
+    val formatter = NumberFormat.getInstance(locale)
+    return formatter.format(value)
 }
+
+
+fun getTemperatureUnitSymbol(context: Context): String {
+    val prefs = context.getSharedPreferences("weather_pref", Context.MODE_PRIVATE)
+    Log.d("WeatherApp", "Temperature Unit: ${prefs.getString("temperature_unit", "celsius")}")
+    return when (prefs.getString("temperature_unit", "celsius")) {
+        "Fahrenheit" -> "°F"
+        "Kelvin" -> "K"
+        else -> "°C"
+    }
+}
+
+fun getWindSpeedUnitSymbol(context: Context): String {
+    val prefs = context.getSharedPreferences("weather_pref", Context.MODE_PRIVATE)
+    return when (prefs.getString("wind_speed_unit", "m/s")) {
+        "km/h" -> "km/h"
+        "mph" -> "mph"
+        else -> "m/s"
+    }
+}
+
+
+
+
+
 
 
 

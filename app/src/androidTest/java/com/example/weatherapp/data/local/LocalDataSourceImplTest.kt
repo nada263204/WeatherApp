@@ -3,7 +3,6 @@ package com.example.weatherapp.data.local
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.example.weatherapp.data.models.*
-import com.example.weatherapp.notifications.NotificationDao
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After

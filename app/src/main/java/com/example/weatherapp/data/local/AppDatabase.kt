@@ -6,7 +6,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import android.content.Context
 import com.example.weatherapp.data.models.HomeScreenData
-import com.example.weatherapp.notifications.NotificationDao
 import com.example.weatherapp.utiles.WeatherTypeConverters
 
 @Database(entities = [FavoritePlace::class, HomeScreenData::class], version = 2, exportSchema = false)
