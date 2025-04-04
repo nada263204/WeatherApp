@@ -85,8 +85,10 @@ fun SettingsScreen(
         DropdownMenuSetting(
             options = if (selectedTemperatureUnit == "Kelvin") listOf("mph") else listOf("m/s", "mph"),
             selectedOption = selectedWindSpeedUnit,
-            onOptionSelected = { viewModel.updateWindSpeedUnit(it) }
+            onOptionSelected = { viewModel.updateWindSpeedUnit(it) },
+            enabled = selectedTemperatureUnit != "Kelvin"
         )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -103,18 +105,20 @@ fun SettingsScreen(
 fun DropdownMenuSetting(
     options: List<String>,
     selectedOption: String,
-    onOptionSelected: (String) -> Unit
+    onOptionSelected: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Button(
-            onClick = { expanded = true },
+            onClick = { if (enabled) expanded = true },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
-            )
+            ),
+            enabled = enabled
         ) {
             Text(selectedOption)
         }
@@ -132,3 +136,4 @@ fun DropdownMenuSetting(
         }
     }
 }
+

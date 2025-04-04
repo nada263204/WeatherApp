@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.weatherapp.PreferenceManager
+import com.example.weatherapp.utiles.PreferenceManager
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
@@ -49,6 +50,9 @@ fun MapScreen(
     val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
+    // Track if the place is favorited
+    var isFavorite by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -105,6 +109,7 @@ fun MapScreen(
                         ) {
                             IconButton(
                                 onClick = {
+                                    isFavorite = !isFavorite // Toggle the favorite state
                                     selectedPosition?.let { position ->
                                         weatherViewModel.fetchAndSaveFavoritePlace(
                                             context,
@@ -116,7 +121,7 @@ fun MapScreen(
                                 }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.FavoriteBorder,
+                                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                                     contentDescription = "Add to Favorites",
                                     tint = primaryColor
                                 )
@@ -124,7 +129,7 @@ fun MapScreen(
 
                             Button(
                                 onClick = {
-                                    weatherViewModel.setUserSelectedLocation(position.latitude, position.longitude,context)
+                                    weatherViewModel.setUserSelectedLocation(position.latitude, position.longitude, context)
                                     val preferenceManager = PreferenceManager(context)
                                     preferenceManager.saveLocation(position.latitude, position.longitude)
                                     navController.popBackStack()

@@ -15,6 +15,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun favoritePlaceDao(): FavoritePlaceDao
     abstract fun homeScreenDao(): HomeScreenDao
 
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null

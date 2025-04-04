@@ -14,9 +14,10 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.example.weatherapp.PreferenceManager
+import com.example.weatherapp.utiles.PreferenceManager
 import com.example.weatherapp.data.local.AppDatabase
 import com.example.weatherapp.data.local.LocalDataSourceImpl
+import com.example.weatherapp.data.local.NotificationDatabase
 import com.example.weatherapp.data.remote.RemoteDataSourceImpl
 import com.example.weatherapp.data.remote.RetrofitClient
 import com.example.weatherapp.data.repo.WeatherRepositoryImpl

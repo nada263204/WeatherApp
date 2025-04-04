@@ -4,6 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.*
+import com.example.weatherapp.data.local.NotificationDatabase
+import com.example.weatherapp.data.local.NotificationEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,7 +25,7 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
         observeNotifications()
     }
     private fun observeNotifications() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             db.getAllNotifications()
                 .collect { notificationList ->
                     _notifications.value = notificationList
@@ -30,9 +34,10 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun addNotification(date: String, time: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val notification = NotificationEntity(date = date, time = time)
             db.insertNotification(notification)
+            delay(100)
             scheduleNotification(date, time)
         }
     }
@@ -53,9 +58,9 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
             WorkManager.getInstance(getApplication()).enqueue(workRequest)
         }
     }
-
+    
     fun deleteNotification(time: String) {
-        viewModelScope.launch {
+        viewModelScope.launch (Dispatchers.IO){
             db.deleteNotificationByTime(time)
         }
     }

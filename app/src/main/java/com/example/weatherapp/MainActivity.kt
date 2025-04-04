@@ -7,9 +7,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.weatherapp.data.local.AppDatabase
@@ -19,15 +16,12 @@ import com.example.weatherapp.data.remote.RetrofitClient
 import com.example.weatherapp.data.repo.LocationRepository
 import com.example.weatherapp.data.repo.WeatherRepositoryImpl
 import com.example.weatherapp.navigations.MainScreen
-import com.example.weatherapp.notifications.NotificationDatabase
-import com.example.weatherapp.setting.LanguageChangeHelper
+import com.example.weatherapp.data.local.NotificationDatabase
+import com.example.weatherapp.utiles.LanguageChangeHelper
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import com.example.weatherapp.utiles.LocationUtils
-import com.example.weatherapp.utils.NetworkUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 

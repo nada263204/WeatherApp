@@ -1,11 +1,7 @@
 package com.example.weatherapp.data.local
 
-
 import com.example.weatherapp.data.models.HomeScreenData
-import com.example.weatherapp.notifications.NotificationDao
-import com.example.weatherapp.notifications.NotificationEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 class LocalDataSourceImpl(
     private val favoritePlaceDao: FavoritePlaceDao,
