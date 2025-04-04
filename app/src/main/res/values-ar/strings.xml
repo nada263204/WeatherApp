@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">تطبيق الطقس</string>
+    <string name="loading">جارٍ التحميل...</string>
+    <string name="loading_forecast">جارٍ تحميل التوقعات...</string>
+    <string name="failed_to_load_weather">فشل تحميل الطقس</string>
+    <string name="failed_to_load_forecast">فشل تحميل التوقعات</string>
+    <string name="today">اليوم</string>
+    <string name="temperature">درجة الحرارة</string>
+    <string name="wind">الرياح</string>
+    <string name="humidity">الرطوبة</string>
+    <string name="clouds">الغيوم</string>
+    <string name="pressure">الضغط</string>
+    <string name="weather_icon_desc">أيقونة الطقس</string>
+    <string name="settings">الإعدادات</string>
+    <string name="select_location">اختر الموقع</string>
+    <string name="temperature_unit">وحدة درجة الحرارة</string>
+    <string name="wind_speed_unit">وحدة سرعة الرياح</string>
+    <string name="this_week">هذا الأسبوع</string>
+    <string name="language">اللغة</string>
+
+    <!-- Notification strings -->
+    <string name="notifications">الإشعارات</string>
+    <string name="no_notifications">لا توجد إشعارات جديدة.</string>
+    <string name="add_notification">إضافة إشعار</string>
+    <string name="select_date_time">اختر التاريخ والوقت</string>
+    <string name="pick_date">اختر التاريخ</string>
+    <string name="pick_time">اختر الوقت</string>
+    <string name="date">التاريخ</string>
+    <string name="time">الوقت</string>
+    <string name="confirm">تأكيد</string>
+    <string name="saved_notification">تم الحفظ: %1$s، %2$s</string>
+    <string name="select_date_time_warning">يرجى اختيار التاريخ والوقت!</string>
+
+    <string name="favorite_places">الأماكن المفضلة</string>
+    <string name="open_map">افتح الخريطة</string>
+    <string name="delete">حذف</string>
+    <string name="weather_icon">أيقونة الطقس</string>
+
+    <!-- Weather Details -->
+    <string name="city_name">المدينة</string>
+</resources>
