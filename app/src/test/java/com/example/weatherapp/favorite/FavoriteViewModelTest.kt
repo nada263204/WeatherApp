@@ -33,7 +33,6 @@ class FavoriteViewModelTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
-    //coroutines in same thread
 
     private val testDispatcher = StandardTestDispatcher()
 
