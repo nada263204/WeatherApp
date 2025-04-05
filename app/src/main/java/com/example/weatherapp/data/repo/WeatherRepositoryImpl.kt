@@ -35,24 +35,17 @@ class WeatherRepositoryImpl(
                 val lastHomeData = homeScreenDataList?.lastOrNull()
 
                 if (lastHomeData != null) {
-                    Log.d("WeatherRepository", "🏠 Using last saved HomeScreenData: ${lastHomeData.cityName}")
                     emit(fromHomeDataToCurrentWeather(lastHomeData))
-                } else {
-                    Log.e("WeatherRepository", "⚠️ No home screen data found in Room.")
                 }
 
                 val favoritePlaces = localDataSource.getAllFavoritePlaces().firstOrNull()
                 val matchingFavorite = favoritePlaces?.find { areCoordinatesEqual(it.coord.lat, lat) && areCoordinatesEqual(it.coord.lon, lon) }
 
                 if (matchingFavorite != null) {
-                    Log.d("WeatherRepository", "⭐ Found matching favorite place: ${matchingFavorite.cityName}")
                     emit(toCurrentWeather(matchingFavorite))
-                } else {
-                    Log.e("WeatherRepository", "❌ No matching favorite place found.")
                 }
             }
         }.catch { e ->
-            Log.e("WeatherRepository", "⚠️ Error fetching current weather: ${e.localizedMessage}")
             emit(null)
         }
     }
@@ -72,24 +65,17 @@ class WeatherRepositoryImpl(
                 val lastHomeData = homeScreenDataList?.lastOrNull()
 
                 if (lastHomeData != null) {
-                    Log.d("WeatherRepository", "🏠 Using last saved HomeScreenData for forecast: ${lastHomeData.cityName}")
                     emit(fromHomeDataToForecastWeather(lastHomeData))
-                } else {
-                    Log.e("WeatherRepository", "⚠️ No home screen data found in Room.")
                 }
 
                 val favoritePlace = localDataSource.getAllFavoritePlaces().firstOrNull()
                     ?.find { areCoordinatesEqual(it.coord.lat, lat) && areCoordinatesEqual(it.coord.lon, lon) }
 
                 if (favoritePlace != null) {
-                    Log.d("WeatherRepository", "⭐ Using favorite place forecast: ${favoritePlace.cityName}")
                     emit(toForecastWeather(favoritePlace))
-                } else {
-                    Log.e("WeatherRepository", "❌ No matching favorite place found for forecast.")
                 }
             }
         }.catch { e ->
-            Log.e("WeatherRepository", "⚠️ Error fetching forecast weather: ${e.localizedMessage}")
             emit(null)
         }
     }

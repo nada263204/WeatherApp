@@ -2,11 +2,13 @@ package com.example.weatherapp
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.weatherapp.data.local.AppDatabase
@@ -29,6 +31,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var weatherRepository: WeatherRepositoryImpl
     private lateinit var locationRepository: LocationRepository
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -68,7 +71,6 @@ class MainActivity : ComponentActivity() {
             if (fineLocationGranted || coarseLocationGranted) {
                 getLastKnownLocation(onLocationReceived)
             } else {
-                Log.e("MainActivity", "⚠️ Location permission denied! Using default location.")
                 onLocationReceived(DEFAULT_LAT, DEFAULT_LON)
             }
         }
@@ -89,7 +91,6 @@ class MainActivity : ComponentActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            Log.e("MainActivity", "⚠️ Location permission not granted. Using default location.")
             onLocationReceived(DEFAULT_LAT, DEFAULT_LON)
             return
         }
@@ -97,15 +98,12 @@ class MainActivity : ComponentActivity() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
                 if (location != null) {
-                    Log.d("MainActivity", "Location retrieved: ${location.latitude}, ${location.longitude}")
                     onLocationReceived(location.latitude, location.longitude)
                 } else {
-                    Log.e("MainActivity", "Location is null. Using default coordinates.")
                     onLocationReceived(DEFAULT_LAT, DEFAULT_LON)
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("MainActivity", "Failed to get location: ${e.message}")
                 onLocationReceived(DEFAULT_LAT, DEFAULT_LON)
             }
     }

@@ -1,4 +1,4 @@
-package com.example.weatherapp.setting
+package com.example.weatherapp.setting.viewModel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -16,7 +16,6 @@ import com.example.weatherapp.home.viewModel.LocationData
 import com.example.weatherapp.utiles.LanguageChangeHelper
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.roundToInt
 
 class SettingsViewModel(private val context: Context, private val locationRepository: LocationRepository) : ViewModel() {
     private val preferenceManager = PreferenceManager(context)

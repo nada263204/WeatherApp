@@ -1,11 +1,11 @@
-package com.example.weatherapp.notifications
+package com.example.weatherapp.notifications.view
 
 import android.Manifest
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -21,10 +21,11 @@ import com.example.weatherapp.data.local.NotificationDatabase
 import com.example.weatherapp.data.remote.RemoteDataSourceImpl
 import com.example.weatherapp.data.remote.RetrofitClient
 import com.example.weatherapp.data.repo.WeatherRepositoryImpl
-import com.example.weatherapp.utiles.LocationUtils
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
+
+import com.example.weatherapp.utils.NetworkUtils
 
 class NotificationWorker(
     context: Context,
@@ -33,7 +34,6 @@ class NotificationWorker(
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun doWork(): Result {
-        Log.d("NotificationWorker", "Worker started")
 
         val context = applicationContext
         val remoteDataSource = RemoteDataSourceImpl(RetrofitClient.service)
@@ -42,47 +42,47 @@ class NotificationWorker(
         val favoritePlaceDao = database.favoritePlaceDao()
         val notificationDao = notificationDatabase.notificationDao()
         val homeDao = database.homeScreenDao()
-        val localDataSource = LocalDataSourceImpl(favoritePlaceDao,notificationDao,homeDao)
-        val weatherRepository = WeatherRepositoryImpl(remoteDataSource, localDataSource,context)
-
-        val locationUtils = LocationUtils(context)
+        val localDataSource = LocalDataSourceImpl(favoritePlaceDao, notificationDao, homeDao)
+        val weatherRepository = WeatherRepositoryImpl(remoteDataSource, localDataSource, context)
 
         val preferenceManager = PreferenceManager(context)
         val location = preferenceManager.getLocation()
 
-        if (location != null) {
-            val (lat, lon) = location
-            runBlocking {
-                val weatherData = weatherRepository.getCurrentWeather(
-                    lat, lon, "en", "metric"
-                ).firstOrNull()
+        if (NetworkUtils.isNetworkAvailable(context)) {
+            if (location != null) {
+                val (lat, lon) = location
+                runBlocking {
+                    val weatherData = weatherRepository.getCurrentWeather(
+                        lat, lon, "en", "metric"
+                    ).firstOrNull()
 
-                Log.d("NotificationWorker", "Weather Data: $weatherData")
 
-                val weatherDescription = weatherData?.weather?.firstOrNull()?.description ?: "Unknown Weather"
-                val time = inputData.getString("notification_time")
+                    val weatherDescription = weatherData?.weather?.firstOrNull()?.description ?: "Unknown Weather"
+                    val time = inputData.getString("notification_time")
 
-                if (!time.isNullOrEmpty()) {
-                    sendNotification(weatherDescription)
-                    deleteNotificationFromDatabase(time)
+                    if (!time.isNullOrEmpty()) {
+                        sendNotification(weatherDescription)
+                        deleteNotificationByTime(time)
+                    }
                 }
             }
         } else {
-            Log.d("NotificationWorker", "No stored location found in SharedPreferences")
+            sendNotification("No network to get data")
         }
 
         return Result.success()
     }
-    private fun deleteNotificationFromDatabase(time: String) {
+
+    private fun deleteNotificationByTime(time: String) {
         val notificationDatabase = NotificationDatabase.getDatabase(applicationContext)
         val notificationDao = notificationDatabase.notificationDao()
 
         runBlocking {
             notificationDao.deleteNotificationByTime(time)
-            Log.d("NotificationWorker", "Notification deleted from database with time: $time")
         }
     }
-    
+
+
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun sendNotification(weatherInfo: String) {
@@ -103,8 +103,8 @@ class NotificationWorker(
         }
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("🌍 Weather Update")
+            .setSmallIcon(R.drawable.ic_dialog_info)
+            .setContentTitle("Weather Update 🌍")
             .setContentText(weatherInfo)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
@@ -135,7 +135,6 @@ class DeleteNotificationWorker(
             runBlocking {
                 notificationDao.deleteNotificationById(notificationId)
             }
-            Log.d("DeleteNotificationWorker", "Deleted notification with ID: $notificationId")
         }
         return Result.success()
     }

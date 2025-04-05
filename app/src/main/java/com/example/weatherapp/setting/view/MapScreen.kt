@@ -1,4 +1,4 @@
-package com.example.weatherapp.setting
+package com.example.weatherapp.setting.view
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.weatherapp.utiles.PreferenceManager
 import com.example.weatherapp.home.viewModel.WeatherViewModel
+import com.example.weatherapp.setting.viewModel.LocationViewModel
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
 import java.io.IOException

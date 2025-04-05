@@ -1,6 +1,5 @@
-package com.example.weatherapp.favorite
+package com.example.weatherapp.favorite.view
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +27,7 @@ import androidx.navigation.NavController
 import com.example.weatherapp.data.local.FavoritePlace
 import com.example.weatherapp.home.viewModel.WeatherViewModel
 import com.example.weatherapp.R
+import com.example.weatherapp.favorite.viewModel.FavoriteViewModel
 
 @Composable
 fun FavoriteScreen(

@@ -148,11 +148,9 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 
-    // ✅ Updated Mockito Dependencies
     testImplementation("org.mockito:mockito-core:5.6.0")
-    testImplementation("org.mockito:mockito-inline:5.2.0") // Allows mocking final classes
+    testImplementation("org.mockito:mockito-inline:5.2.0")
 
-    // ✅ Fix ByteBuddy NoClassDefFoundError
     testImplementation("net.bytebuddy:byte-buddy:1.14.8")
     testImplementation("net.bytebuddy:byte-buddy-agent:1.14.8")
 
@@ -162,5 +160,7 @@ dependencies {
 
     implementation ("com.airbnb.android:lottie:6.1.0")
     implementation ("com.airbnb.android:lottie-compose:6.0.0")
+    testImplementation ("org.mockito.kotlin:mockito-kotlin:5.2.1")
+
 }
 
